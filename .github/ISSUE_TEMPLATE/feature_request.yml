@@ -1,0 +1,58 @@
+name: Feature Request
+description: Propose a new feature or enhancement
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the feature clearly so that any future work session can pick this up without additional context.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What
+      description: One-line summary of the feature.
+      placeholder: e.g. Add Netease Cloud Music as a lyrics provider
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Motivation, user scenario, or pain point this addresses.
+      placeholder: |
+        e.g. Many Chinese songs are missing from LRCLIB and Musixmatch.
+        Netease has the largest Chinese lyrics database.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Checkboxes that define "done".
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-notes
+    attributes:
+      label: Technical Notes
+      description: Known constraints, related modules, API references, or prior art.
+      placeholder: |
+        e.g. Related modules: Lyrics/Providers/, LyricsManager.swift
+        API docs: https://...
+    validations:
+      required: false
+
+  - type: textarea
+    id: design-decisions
+    attributes:
+      label: Design Decisions
+      description: Record important decisions and their reasoning as development progresses. Update this section via comments.
+    validations:
+      required: false

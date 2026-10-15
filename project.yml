@@ -1,0 +1,75 @@
+name: Lyrisland
+options:
+  bundleIdPrefix: com.wangjiyuan
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.0"
+  minimumXcodeGenVersion: "2.39"
+  defaultConfig: Release
+
+localizations:
+  - en
+  - zh-Hans
+  - zh-Hant
+  - ja
+  - ko
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    DEVELOPMENT_TEAM: ""
+
+packages:
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: "2.0.0"
+
+targets:
+  Lyrisland:
+    type: application
+    platform: macOS
+    sources:
+      - Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wangjiyuan.Lyrisland
+        INFOPLIST_FILE: Sources/App/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: Sources/App/Lyrisland.entitlements
+        ENABLE_HARDENED_RUNTIME: true
+    dependencies:
+      - package: KeyboardShortcuts
+    preBuildScripts:
+      - script: |
+          if which swiftformat >/dev/null; then
+            swiftformat "$SRCROOT/Sources"
+          else
+            echo "warning: SwiftFormat not installed, run 'brew install swiftformat'"
+          fi
+        name: SwiftFormat
+      - script: |
+          if which swiftlint >/dev/null; then
+            swiftlint --fix "$SRCROOT/Sources" && swiftlint "$SRCROOT/Sources"
+          else
+            echo "warning: SwiftLint not installed, run 'brew install swiftlint'"
+          fi
+        name: SwiftLint
+    entitlements:
+      path: Sources/App/Lyrisland.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
+        com.apple.security.automation.apple-events: true
+        com.apple.security.network.client: true
+
+  LyrislandTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests
+    dependencies:
+      - target: Lyrisland
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wangjiyuan.LyrislandTests
+        GENERATE_INFOPLIST_FILE: true
