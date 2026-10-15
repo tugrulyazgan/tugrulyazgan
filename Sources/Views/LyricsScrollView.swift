@@ -20,6 +20,7 @@ struct LyricsScrollView: View {
                     ForEach(lyrics.lines) { line in
                         if line.id == currentLineIndex {
                             currentRow(line)
+                                .overlay { syncButton(for: line) }
                                 .frame(maxWidth: .infinity, alignment: alignment)
                                 .environment(\.layoutDirection, line.text.isRTL ? .rightToLeft : .leftToRight)
                                 .id(line.id)
@@ -34,6 +35,7 @@ struct LyricsScrollView: View {
                                 contentColor: contentColor,
                                 translationColor: translationColor
                             )
+                            .overlay { syncButton(for: line) }
                             .frame(maxWidth: .infinity, alignment: alignment)
                             .environment(\.layoutDirection, line.text.isRTL ? .rightToLeft : .leftToRight)
                             .id(line.id)
@@ -52,6 +54,14 @@ struct LyricsScrollView: View {
                     proxy.scrollTo(newIdx, anchor: .center)
                 }
             }
+        }
+    }
+
+    /// Clicking a line says "the singer is here now": the lyrics jump to it and keep
+    /// following from there, without seeking Spotify.
+    private func syncButton(for line: LyricLine) -> some View {
+        NativeButtonOverlay {
+            NotificationCenter.default.post(name: .lyricsSyncToLine, object: line.time)
         }
     }
 

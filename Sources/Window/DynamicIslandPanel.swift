@@ -302,6 +302,8 @@ extension Notification.Name {
     static let islandSnapZoneChanged = Notification.Name("islandSnapZoneChanged")
     static let lyricsOffsetAdjust = Notification.Name("lyricsOffsetAdjust")
     static let lyricsOffsetReset = Notification.Name("lyricsOffsetReset")
+    /// The user clicked a lyric line: the singer is at this line right now (object: line time).
+    static let lyricsSyncToLine = Notification.Name("lyricsSyncToLine")
     static let openLyricsPicker = Notification.Name("openLyricsPicker")
 }
 

@@ -18,14 +18,17 @@ struct NativeButtonOverlay: NSViewRepresentable {
         return button
     }
 
-    func updateNSView(_: NSButton, context _: Context) {}
+    func updateNSView(_: NSButton, context: Context) {
+        // Rows can be reused for other content (e.g. a new song's lyrics); keep the action current.
+        context.coordinator.action = action
+    }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(action: action)
     }
 
     final class Coordinator: NSObject {
-        let action: () -> Void
+        var action: () -> Void
         init(action: @escaping () -> Void) {
             self.action = action
         }

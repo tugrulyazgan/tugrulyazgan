@@ -24,6 +24,16 @@ final class LyricsManager: ObservableObject {
         }
     }
 
+    /// Offset change that makes the line starting at `lineTime` the active one at `position`
+    /// (a hair past its start so rounding never leaves the previous line active).
+    nonisolated static func offsetDelta(
+        toStartLineAt lineTime: TimeInterval,
+        position: TimeInterval,
+        currentOffset: TimeInterval
+    ) -> TimeInterval {
+        lineTime - (position + currentOffset) + 0.05
+    }
+
     func resetOffset() {
         if let lyrics = currentLyrics {
             currentLyrics = SyncedLyrics(

@@ -236,3 +236,19 @@ struct KaraokeProgressTests {
         #expect(words[1].offset == 0.42)
     }
 }
+
+struct TapToSyncTests {
+    @Test("clicking a line makes it the active line at the current position")
+    func offsetMakesClickedLineCurrent() {
+        let lyrics = SyncedLyrics(
+            lines: (0 ..< 10).map { LyricLine(id: $0, time: Double($0) * 5, text: "line \($0)", translation: nil) },
+            source: "test",
+            globalOffset: 1.5
+        )
+        // Lyrics ran ahead: playback is at 22s but the singer is only at line 3 (15s).
+        let delta = LyricsManager.offsetDelta(toStartLineAt: 15, position: 22, currentOffset: lyrics.globalOffset)
+        let shifted = SyncedLyrics(lines: lyrics.lines, source: "test", globalOffset: lyrics.globalOffset + delta)
+        #expect(shifted.lineIndex(at: 22) == 3)
+        #expect(shifted.lineIndex(at: 27.1) == 4) // keeps following from there
+    }
+}

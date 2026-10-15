@@ -197,6 +197,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         NotificationCenter.default.addObserver(
             self,
+            selector: #selector(handleSyncToLine(_:)),
+            name: .lyricsSyncToLine,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
             selector: #selector(handleOffsetReset),
             name: .lyricsOffsetReset,
             object: nil
@@ -223,6 +230,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let delta = notification.object as? Double else { return }
         lyricsManager.adjustOffset(by: delta)
         syncOffsetToDefaults()
+    }
+
+    /// Re-time the lyrics so the clicked line starts now. Spotify keeps playing where it is;
+    /// only the lyrics offset moves (and it applies to the rest of the song).
+    @objc private func handleSyncToLine(_ notification: Notification) {
+        guard let lineTime = notification.object as? Double,
+              let lyrics = lyricsManager.currentLyrics
+        else { return }
+        let delta = LyricsManager.offsetDelta(
+            toStartLineAt: lineTime,
+            position: syncEngine.interpolatedPosition,
+            currentOffset: lyrics.globalOffset
+        )
+        lyricsManager.adjustOffset(by: delta)
+        syncOffsetToDefaults()
+        logInfo("Lyrics re-synced to clicked line (offset change \(String(format: "%+.2f", delta))s)")
     }
 
     @objc private func handleOffsetReset() {
