@@ -4,6 +4,7 @@
 
 ### Added
 
+- Karaoke-style current line: it fills with color as it is sung and long lines scroll at the singer's pace — word by word when Musixmatch richsync timing is available, otherwise spread over an estimated singing time.
 - When no provider has synced lyrics, plain lyrics are looked up on the web (LRCLIB plain text, Musixmatch plain lyrics, Genius, Songtexte.com, then lyrics.ovh) and spread over the song with estimated timing, so they still scroll and get translated. The source is marked with "≈".
 - Translation line under each lyric (default: Turkish, shown in yellow). Lines are translated with Google Translate, de-duplicated and cached per song. Toggle, target language and color live in Settings → Lyrics → Translation.
 

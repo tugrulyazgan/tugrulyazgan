@@ -36,6 +36,7 @@ struct FullIslandView: View {
 
             if let lyrics = lyricsManager.currentLyrics {
                 LyricsScrollView(
+                    syncEngine: syncEngine,
                     lyrics: lyrics,
                     currentLineIndex: syncEngine.currentLineIndex ?? 0,
                     alignment: appState.resolvedLyricsAlignment

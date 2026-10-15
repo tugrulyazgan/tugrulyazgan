@@ -196,7 +196,10 @@ extension SyncedLyrics {
         SyncedLyrics(
             lines: lines.map { line in
                 let key = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                return LyricLine(id: line.id, time: line.time, text: line.text, translation: map[key] ?? line.translation)
+                return LyricLine(
+                    id: line.id, time: line.time, text: line.text,
+                    translation: map[key] ?? line.translation, words: line.words
+                )
             },
             source: source,
             globalOffset: globalOffset

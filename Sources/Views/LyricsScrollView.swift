@@ -3,6 +3,7 @@ import SwiftUI
 /// Auto-scrolling lyrics list that tracks the current playback position.
 /// Only re-renders when the current line index changes, not on every tick.
 struct LyricsScrollView: View {
+    @ObservedObject var syncEngine: PlaybackSyncEngine
     let lyrics: SyncedLyrics
     let currentLineIndex: Int
     var alignment: Alignment = .leading
@@ -17,19 +18,26 @@ struct LyricsScrollView: View {
                     Spacer(minLength: 40)
 
                     ForEach(lyrics.lines) { line in
-                        LyricLineRow(
-                            text: line.text,
-                            translation: line.translation,
-                            isCurrent: line.id == currentLineIndex,
-                            distance: abs(line.id - currentLineIndex),
-                            lineDuration: lineDuration(for: line.id),
-                            rootFontSize: rootFontSize,
-                            contentColor: contentColor,
-                            translationColor: translationColor
-                        )
-                        .frame(maxWidth: .infinity, alignment: alignment)
-                        .environment(\.layoutDirection, line.text.isRTL ? .rightToLeft : .leftToRight)
-                        .id(line.id)
+                        if line.id == currentLineIndex {
+                            currentRow(line)
+                                .frame(maxWidth: .infinity, alignment: alignment)
+                                .environment(\.layoutDirection, line.text.isRTL ? .rightToLeft : .leftToRight)
+                                .id(line.id)
+                        } else {
+                            LyricLineRow(
+                                text: line.text,
+                                translation: line.translation,
+                                isCurrent: line.id == currentLineIndex,
+                                distance: abs(line.id - currentLineIndex),
+                                lineDuration: lineDuration(for: line.id),
+                                rootFontSize: rootFontSize,
+                                contentColor: contentColor,
+                                translationColor: translationColor
+                            )
+                            .frame(maxWidth: .infinity, alignment: alignment)
+                            .environment(\.layoutDirection, line.text.isRTL ? .rightToLeft : .leftToRight)
+                            .id(line.id)
+                        }
                     }
 
                     Spacer(minLength: 40)
@@ -43,6 +51,28 @@ struct LyricsScrollView: View {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     proxy.scrollTo(newIdx, anchor: .center)
                 }
+            }
+        }
+    }
+
+    /// The line being sung: fills and scrolls with the vocals, translation underneath.
+    private func currentRow(_ line: LyricLine) -> some View {
+        VStack(spacing: 2) {
+            LiveLyricLine(
+                syncEngine: syncEngine,
+                lyrics: lyrics,
+                index: line.id,
+                font: .system(size: .rem(0.9375, root: rootFontSize), weight: .bold),
+                color: contentColor
+            )
+            if let translation = line.translation {
+                MarqueeText(
+                    text: translation,
+                    font: .system(size: .rem(0.75, root: rootFontSize), weight: .medium),
+                    color: translationColor,
+                    loops: false,
+                    lineDuration: lineDuration(for: line.id)
+                )
             }
         }
     }

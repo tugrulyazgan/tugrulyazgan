@@ -187,3 +187,52 @@ struct WebLyricsScraperTests {
         #expect(WebLyricsScrapers.songtexteLyrics(fromHTML: page) == "Du\nDu hast\nDu hast mich\nDu hast mich gefragt")
     }
 }
+
+struct KaraokeProgressTests {
+    @Test("without word timing a line fills over its estimated singing time")
+    func estimatedProgress() {
+        let lyrics = SyncedLyrics(
+            lines: [
+                LyricLine(id: 0, time: 10, text: "Ich geh nach Haus", translation: nil),
+                LyricLine(id: 1, time: 20, text: "Die Nacht ist lang", translation: nil),
+            ],
+            source: "test",
+            globalOffset: 0
+        )
+        #expect(lyrics.progress(ofLine: 0, at: 9) == 0)
+        let mid = lyrics.progress(ofLine: 0, at: 11)
+        #expect(mid > 0 && mid < 1)
+        #expect(lyrics.progress(ofLine: 0, at: 19) == 1)
+        #expect(lyrics.progress(ofLine: 5, at: 11) == 0)
+    }
+
+    @Test("singing time never exceeds the gap to the next line")
+    func estimateCappedByGap() {
+        #expect(SyncedLyrics.estimatedSingingDuration(characters: 200, gapToNextLine: 4) <= 4)
+        #expect(SyncedLyrics.estimatedSingingDuration(characters: 10, gapToNextLine: 30) < 3)
+    }
+
+    @Test("word timings drive progress word by word")
+    func wordProgress() {
+        let words = [LyricWord(offset: 0, text: "Du"), LyricWord(offset: 0.5, text: " "), LyricWord(offset: 1.0, text: "hast")]
+        let lyrics = SyncedLyrics(
+            lines: [
+                LyricLine(id: 0, time: 10, text: "Du hast", translation: nil, words: words),
+                LyricLine(id: 1, time: 14, text: "Du hast mich", translation: nil),
+            ],
+            source: "test",
+            globalOffset: 0
+        )
+        #expect(abs(lyrics.progress(ofLine: 0, at: 10.5) - 2.0 / 7.0) < 0.001) // "Du" done
+        #expect(abs(lyrics.progress(ofLine: 0, at: 11.0) - 3.0 / 7.0) < 0.001) // "Du " done
+        #expect(lyrics.progress(ofLine: 0, at: 13.9) == 1)
+    }
+
+    @Test("Musixmatch richsync words are parsed")
+    func richsyncParsing() throws {
+        let raw: [[String: Any]] = [["c": "Du", "o": 0], ["c": " ", "o": 0.42], ["c": "hast", "o": 0.5]]
+        let words = try #require(MusixmatchProvider.richsyncWords(raw))
+        #expect(words.map(\.text).joined() == "Du hast")
+        #expect(words[1].offset == 0.42)
+    }
+}

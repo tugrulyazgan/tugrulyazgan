@@ -60,12 +60,12 @@ struct ExpandedIslandView: View {
 
                     if isCurrent {
                         VStack(spacing: 0) {
-                            MarqueeText(
-                                text: line.text,
+                            LiveLyricLine(
+                                syncEngine: syncEngine,
+                                lyrics: lyrics,
+                                index: currentIdx,
                                 font: .system(size: .rem(0.9375, root: rootFontSize), weight: .bold),
-                                color: appState.contentColor,
-                                loops: false,
-                                lineDuration: lineDuration(for: currentIdx, in: lyrics)
+                                color: appState.contentColor
                             )
                             .frame(height: 20)
                             .frame(maxWidth: .infinity, alignment: appState.resolvedLyricsAlignment)

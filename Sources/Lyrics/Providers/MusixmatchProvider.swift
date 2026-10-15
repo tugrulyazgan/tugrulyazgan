@@ -325,15 +325,27 @@ final class MusixmatchProvider: LyricsProvider, @unchecked Sendable {
         }
 
         var lines: [LyricLine] = []
-        for (index, entry) in entries.enumerated() {
+        for entry in entries {
             guard let ts = entry["ts"] as? Double,
                   let x = entry["x"] as? String else { continue }
             guard !x.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
-            lines.append(LyricLine(id: index, time: ts, text: x, translation: nil))
+            lines.append(LyricLine(id: lines.count, time: ts, text: x, translation: nil, words: Self.richsyncWords(entry["l"])))
         }
 
         guard !lines.isEmpty else { return nil }
         return SyncedLyrics(lines: lines, source: "musixmatch-richsync", globalOffset: 0)
+    }
+
+    /// Richsync `l` entries: `[{"c": "Ich", "o": 0.0}, {"c": " ", "o": 0.31}, …]`, offsets relative to the line.
+    static func richsyncWords(_ raw: Any?) -> [LyricWord]? {
+        guard let items = raw as? [[String: Any]] else { return nil }
+        let words = items.compactMap { item -> LyricWord? in
+            guard let text = item["c"] as? String,
+                  let offset = (item["o"] as? NSNumber)?.doubleValue
+            else { return nil }
+            return LyricWord(offset: offset, text: text)
+        }
+        return words.isEmpty ? nil : words
     }
 
     /// Length in seconds of the first returned subtitle, if positive.

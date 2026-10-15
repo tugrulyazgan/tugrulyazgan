@@ -18,12 +18,12 @@ struct CompactLyricsView: View {
            let translation = lyrics.lines[idx].translation {
             // Translation mode: original line on top, translation below in its own color
             VStack(alignment: appState.resolvedHorizontalAlignment, spacing: 2) {
-                MarqueeText(
-                    text: lyrics.lines[idx].text,
+                LiveLyricLine(
+                    syncEngine: syncEngine,
+                    lyrics: lyrics,
+                    index: idx,
                     font: .system(size: .rem(0.8125, root: rootFontSize), weight: .semibold),
-                    color: appState.contentColor,
-                    loops: false,
-                    lineDuration: lineDuration(for: idx, in: lyrics)
+                    color: appState.contentColor
                 )
                 .environment(\.layoutDirection, lyrics.lines[idx].text.isRTL ? .rightToLeft : .leftToRight)
                 MarqueeText(
@@ -45,21 +45,47 @@ struct CompactLyricsView: View {
             let indices = idx + 1 < lyrics.lines.count ? [idx, idx + 1] : [idx]
             VStack(alignment: appState.resolvedHorizontalAlignment, spacing: 2) {
                 ForEach(indices, id: \.self) { lineIdx in
-                    DualLineRow(
-                        text: lyrics.lines[lineIdx].text,
-                        isCurrent: lineIdx == idx,
-                        lineDuration: lineDuration(for: lineIdx, in: lyrics),
-                        rootFontSize: rootFontSize,
-                        contentColor: appState.contentColor
-                    )
+                    Group {
+                        if lineIdx == idx {
+                            LiveLyricLine(
+                                syncEngine: syncEngine,
+                                lyrics: lyrics,
+                                index: lineIdx,
+                                font: .system(size: .rem(0.8125, root: rootFontSize), weight: .medium),
+                                color: appState.contentColor
+                            )
+                        } else {
+                            DualLineRow(
+                                text: lyrics.lines[lineIdx].text,
+                                isCurrent: false,
+                                lineDuration: lineDuration(for: lineIdx, in: lyrics),
+                                rootFontSize: rootFontSize,
+                                contentColor: appState.contentColor
+                            )
+                        }
+                    }
                     .environment(\.layoutDirection, lyrics.lines[lineIdx].text.isRTL ? .rightToLeft : .leftToRight)
                     .transition(.push(from: .bottom).combined(with: .opacity))
                 }
             }
             .animation(.smooth(duration: 0.35), value: idx)
             .frame(maxWidth: .infinity, alignment: appState.resolvedLyricsAlignment)
+        } else if let lyrics = lyricsManager.currentLyrics, let idx = currentLineIndex {
+            // Single-line mode: the current line fills and scrolls with the vocals
+            LiveLyricLine(
+                syncEngine: syncEngine,
+                lyrics: lyrics,
+                index: idx,
+                font: .system(size: .rem(0.8125, root: rootFontSize), weight: .medium),
+                color: appState.contentColor
+            )
+            .transition(.push(from: .bottom).combined(with: .opacity))
+            .id(idx)
+            .animation(.smooth(duration: 0.35), value: idx)
+            .frame(maxWidth: .infinity, alignment: appState.resolvedLyricsAlignment)
+            .environment(\.layoutDirection, lyrics.lines[idx].text.isRTL ? .rightToLeft : .leftToRight)
         } else {
-            // Single-line mode: original MarqueeText behavior
+            // Status text (loading / not available / play to start, or "♪" before the first line)
             MarqueeText(
                 text: displayText,
                 font: .system(size: .rem(0.8125, root: rootFontSize), weight: .medium),
