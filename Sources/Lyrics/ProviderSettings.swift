@@ -54,6 +54,8 @@ struct ProviderSettings: Codable, Equatable {
         "netease": "Netease",
         "qqmusic": "QQ Music",
         "kugou": "KuGou",
+        PlainLyricsFallback.lrclibSource: "LRCLIB ≈",
+        PlainLyricsFallback.lyricsOvhSource: "lyrics.ovh ≈",
     ]
 
     static func displayName(for id: String) -> String {

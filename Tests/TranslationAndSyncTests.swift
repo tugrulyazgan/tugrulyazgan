@@ -117,3 +117,30 @@ struct LyricsTranslatorTests {
         #expect(translated.globalOffset == 0.5)
     }
 }
+
+struct PlainLyricsFallbackTests {
+    @Test("plain lyrics are spread over the song in order, skipping headers")
+    func estimatesTiming() throws {
+        let plain = "[Strophe 1]\nIch geh nach Haus\nDie Nacht ist lang\n\n[Refrain]\nWir tanzen\n"
+        let lyrics = try #require(PlainLyricsFallback.estimatedLyrics(from: plain, durationSeconds: 200, source: "x"))
+        #expect(lyrics.lines.map(\.text) == ["Ich geh nach Haus", "Die Nacht ist lang", "Wir tanzen"])
+        #expect(lyrics.lines.map(\.id) == [0, 1, 2])
+        let times = lyrics.lines.map(\.time)
+        #expect(times == times.sorted())
+        #expect(times[0] >= 10 && times[0] < 20) // after a short intro
+        #expect(times.last! < 200)
+    }
+
+    @Test("empty text yields no lyrics")
+    func emptyText() {
+        #expect(PlainLyricsFallback.estimatedLyrics(from: " \n\n[Intro]\n", durationSeconds: 180, source: "x") == nil)
+    }
+
+    @Test("titles and artists are cleaned for searching")
+    func cleansQuery() {
+        #expect(PlainLyricsFallback.cleanTitle("Du hast - Remastered 2011") == "Du hast")
+        #expect(PlainLyricsFallback.cleanTitle("Chöre (feat. Someone)") == "Chöre")
+        #expect(PlainLyricsFallback.primaryArtist("Zsá Zsá, Other") == "Zsá Zsá")
+        #expect(PlainLyricsFallback.primaryArtist("Mark Forster & Lena") == "Mark Forster")
+    }
+}

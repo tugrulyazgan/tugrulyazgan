@@ -54,7 +54,11 @@ final class LyricsManager: ObservableObject {
         return allProviders.filter { enabledIds.contains($0.name) }
     }
 
+    /// Web search for plain lyrics when no provider has synced ones (nil disables it).
+    private let plainFallback: (TrackInfo) async -> SyncedLyrics?
+
     init(
+        plainFallback: @escaping (TrackInfo) async -> SyncedLyrics? = { await PlainLyricsFallback.fetch(for: $0) },
         cache: Cache<String, SyncedLyrics> = Cache(
             memoryCountLimit: 200,
             namespace: "Lyrics",
@@ -63,6 +67,7 @@ final class LyricsManager: ObservableObject {
         ),
         translator: LyricsTranslator? = LyricsTranslator()
     ) {
+        self.plainFallback = plainFallback
         self.cache = cache
         self.translator = translator
         providerSettings = ProviderSettings.load()
@@ -121,6 +126,10 @@ final class LyricsManager: ObservableObject {
             logInfo("Best lyrics via \(best.provider) (score \(String(format: "%.1f", best.score))) for: \(track.title)")
             await cache.set(best.lyrics, forKey: track.id)
             showLyrics(best.lyrics)
+        } else if let plain = await plainFallback(track), currentTrack?.id == track.id {
+            // Not cached: synced lyrics may show up on a provider later.
+            logInfo("No synced lyrics; using web plain lyrics with estimated timing for: \(track.title)")
+            showLyrics(plain)
         } else {
             logWarning("No lyrics found for: \(track.title) — \(track.artist)")
             currentLyrics = nil
