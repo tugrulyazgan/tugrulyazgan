@@ -1,17 +1,45 @@
 import SwiftUI
 
 /// The lyrics portion of the compact island, shared by the horizontal compact
-/// layout and the notch-hugging layout. Single-line marquee, or a two-line
-/// current+next view when dual-line mode is on. Falls back to status text
+/// layout and the notch-hugging layout. Shows the current line with its
+/// translation underneath when translation is on; otherwise a single-line
+/// marquee, or a two-line current+next view in dual-line mode (also used
+/// when translation is on but this line has none). Falls back to status text
 /// (loading / not available / play to start) when there is nothing to show.
 struct CompactLyricsView: View {
     @ObservedObject var syncEngine: PlaybackSyncEngine
     @ObservedObject var lyricsManager: LyricsManager
     @ObservedObject var appState: AppState
     @Environment(\.rootFontSize) private var rootFontSize
+    @Environment(\.translationColor) private var translationColor
 
     var body: some View {
-        if appState.dualLineMode, let lyrics = lyricsManager.currentLyrics, let idx = currentLineIndex {
+        if appState.translationEnabled, let lyrics = lyricsManager.currentLyrics, let idx = currentLineIndex,
+           let translation = lyrics.lines[idx].translation {
+            // Translation mode: original line on top, translation below in its own color
+            VStack(alignment: appState.resolvedHorizontalAlignment, spacing: 2) {
+                MarqueeText(
+                    text: lyrics.lines[idx].text,
+                    font: .system(size: .rem(0.8125, root: rootFontSize), weight: .semibold),
+                    color: appState.contentColor,
+                    loops: false,
+                    lineDuration: lineDuration(for: idx, in: lyrics)
+                )
+                .environment(\.layoutDirection, lyrics.lines[idx].text.isRTL ? .rightToLeft : .leftToRight)
+                MarqueeText(
+                    text: translation,
+                    font: .system(size: .rem(0.6875, root: rootFontSize), weight: .medium),
+                    color: translationColor,
+                    loops: false,
+                    lineDuration: lineDuration(for: idx, in: lyrics)
+                )
+                .environment(\.layoutDirection, translation.isRTL ? .rightToLeft : .leftToRight)
+            }
+            .transition(.push(from: .bottom).combined(with: .opacity))
+            .id(idx)
+            .animation(.smooth(duration: 0.35), value: idx)
+            .frame(maxWidth: .infinity, alignment: appState.resolvedLyricsAlignment)
+        } else if appState.usesTwoRowCompact, let lyrics = lyricsManager.currentLyrics, let idx = currentLineIndex {
             // Dual-line mode: ForEach keyed by line index so SwiftUI tracks
             // the next line sliding up to become the current line
             let indices = idx + 1 < lyrics.lines.count ? [idx, idx + 1] : [idx]

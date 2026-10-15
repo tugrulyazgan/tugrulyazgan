@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.3-tr — 2026-10-15
+
+### Added
+
+- Translation line under each lyric (default: Turkish, shown in yellow). Lines are translated with Google Translate, de-duplicated and cached per song. Toggle, target language and color live in Settings → Lyrics → Translation.
+
+### Fixed
+
+- Lyrics never advanced on macOS systems that use a comma as decimal separator (Turkish, German, …): AppleScript coerced Spotify's player position to text as "83,45", which failed to parse and pinned the position to 0. The script now returns integer milliseconds and the parser accepts both separators.
+- The sync anchor now uses the midpoint of the AppleScript round trip and blends small jitter instead of snapping to every sample, so the active line no longer flickers at line boundaries.
+
 ## 0.7.2 — 2026-09-16
 
 ### Fixed

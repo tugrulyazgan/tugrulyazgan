@@ -205,9 +205,51 @@ private struct AppearanceTab: View {
 private struct LyricsTab: View {
     @ObservedObject var lyricsManager: LyricsManager
     @AppStorage("currentLyricsOffset") private var currentOffset: Double = 0
+    @AppStorage(TranslationSettings.Keys.enabled) private var translationEnabled = true
+    @AppStorage(TranslationSettings.Keys.language) private var translationLanguage = TranslationSettings.defaultLanguage
+    @AppStorage(TranslationSettings.Keys.colorHex) private var translationColorHex = TranslationSettings.defaultColorHex
+
+    private var translationColorBinding: Binding<Color> {
+        Binding(
+            get: { Color(hex: translationColorHex) ?? .yellow },
+            set: { translationColorHex = $0.hexString }
+        )
+    }
 
     var body: some View {
         Form {
+            Section {
+                Toggle(String(localized: "settings.translation.enabled"), isOn: $translationEnabled)
+
+                if translationEnabled {
+                    Picker(String(localized: "settings.translation.language"), selection: $translationLanguage) {
+                        ForEach(TranslationSettings.languages) { language in
+                            Text(language.name).tag(language.code)
+                        }
+                    }
+
+                    HStack {
+                        ColorPicker(
+                            String(localized: "settings.translation.color"),
+                            selection: translationColorBinding,
+                            supportsOpacity: false
+                        )
+                        if translationColorHex != TranslationSettings.defaultColorHex {
+                            Button(String(localized: "settings.translation.color_reset")) {
+                                translationColorHex = TranslationSettings.defaultColorHex
+                            }
+                            .controlSize(.small)
+                        }
+                    }
+                }
+
+                Text(String(localized: "settings.translation.hint"))
+                    .foregroundStyle(.tertiary)
+                    .font(.caption)
+            } header: {
+                Text(String(localized: "settings.translation.section"))
+            }
+
             Section {
                 HStack {
                     Text(String(localized: "settings.lyrics.current_offset"))

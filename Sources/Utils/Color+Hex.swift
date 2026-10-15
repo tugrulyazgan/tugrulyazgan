@@ -15,6 +15,18 @@ extension EnvironmentValues {
     }
 }
 
+private struct TranslationColorKey: EnvironmentKey {
+    static let defaultValue: Color = .yellow
+}
+
+extension EnvironmentValues {
+    /// Color of the translated line shown under each lyric.
+    var translationColor: Color {
+        get { self[TranslationColorKey.self] }
+        set { self[TranslationColorKey.self] = newValue }
+    }
+}
+
 // MARK: - Color Extensions
 
 extension Color {

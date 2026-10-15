@@ -37,6 +37,7 @@ struct IslandContentView: View {
         }
         .environment(\.rootFontSize, appState.rootFontSize)
         .environment(\.contentColor, appState.contentColor)
+        .environment(\.translationColor, appState.translationColor)
         .shadow(color: appState.contentColor.opacity(isInSnapZone ? 0.3 : 0), radius: 8)
         .onAppear {
             refreshNotchGeometry()
@@ -72,7 +73,7 @@ struct IslandContentView: View {
         .onChange(of: islandState) { _, newState in
             resizePanel(for: newState)
         }
-        .onChange(of: appState.dualLineMode) { _, _ in
+        .onChange(of: appState.usesTwoRowCompact) { _, _ in
             resizePanel(for: islandState)
         }
         .onChange(of: appState.showArtwork) { _, _ in
@@ -132,7 +133,7 @@ struct IslandContentView: View {
             }
             .frame(
                 maxHeight: showAttachedAppearance
-                    ? Self.contentHeight(for: islandState, dualLine: appState.dualLineMode, artwork: appState.showArtwork)
+                    ? Self.contentHeight(for: islandState, dualLine: appState.usesTwoRowCompact, artwork: appState.showArtwork)
                     : .infinity
             )
             .padding(.horizontal, showAttachedAppearance ? Self.earRadius : 0)
@@ -404,7 +405,7 @@ struct IslandContentView: View {
         window.animateResize(to: Self.size(
             for: state,
             attached: isAttached,
-            dualLine: appState.dualLineMode,
+            dualLine: appState.usesTwoRowCompact,
             artwork: appState.showArtwork,
             // Same fallback as `refreshNotchGeometry`: an off-screen panel reports
             // no screen, and the two must agree on which screen they describe.

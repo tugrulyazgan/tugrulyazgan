@@ -1333,31 +1333,31 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose Lyrics\u2026"
+            "value": "Choose Lyrics…"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择歌词\u2026"
+            "value": "选择歌词…"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "選擇歌詞\u2026"
+            "value": "選擇歌詞…"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "歌詞を選択\u2026"
+            "value": "歌詞を選択…"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "가사 선택\u2026"
+            "value": "가사 선택…"
           }
         }
       }
@@ -1469,31 +1469,31 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loading %@\u2026"
+            "value": "Loading %@…"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在加载 %@\u2026"
+            "value": "正在加载 %@…"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在載入 %@\u2026"
+            "value": "正在載入 %@…"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ を読み込み中\u2026"
+            "value": "%@ を読み込み中…"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 로딩 중\u2026"
+            "value": "%@ 로딩 중…"
           }
         }
       }
@@ -4146,6 +4146,210 @@
           "stringUnit": {
             "state": "translated",
             "value": "가사는 여러 소스에서 순서대로 가져옵니다: LRCLIB → Musixmatch → Soda Music → Netease. 싱크 가사를 먼저 반환하는 소스가 사용됩니다."
+          }
+        }
+      }
+    },
+    "settings.translation.section": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻譯"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역"
+          }
+        }
+      }
+    },
+    "settings.translation.enabled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show translation under lyrics"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在歌词下方显示翻译"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在歌詞下方顯示翻譯"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "歌詞の下に翻訳を表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가사 아래에 번역 표시"
+          }
+        }
+      }
+    },
+    "settings.translation.language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate to"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译为"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻譯為"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳先の言語"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역할 언어"
+          }
+        }
+      }
+    },
+    "settings.translation.color": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation color"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译颜色"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻譯顏色"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳の色"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 색상"
+          }
+        }
+      }
+    },
+    "settings.translation.color_reset": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重設"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リセット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재설정"
+          }
+        }
+      }
+    },
+    "settings.translation.hint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines are translated with Google Translate (internet required) and cached per song."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "歌词通过 Google 翻译进行翻译（需要联网），并按歌曲缓存。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "歌詞透過 Google 翻譯進行翻譯（需要連網），並依歌曲快取。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "歌詞は Google 翻訳で翻訳され（インターネット接続が必要）、曲ごとにキャッシュされます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가사는 Google 번역으로 번역되며(인터넷 필요) 곡별로 캐시됩니다."
           }
         }
       }

@@ -271,7 +271,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
 
-            syncEngine.calibrate(position: state.position, isPlaying: state.isPlaying)
+            syncEngine.calibrate(position: state.position, isPlaying: state.isPlaying, sampledAt: state.sampledAt)
             syncEngine.setTrackId(state.trackId)
             syncEngine.setArtworkURL(state.artworkURL)
             syncEngine.setTrackInfo(title: state.title, artist: state.artist)

@@ -55,15 +55,50 @@ final class PlaybackSyncEngine: ObservableObject {
         tickTimer?.invalidate()
     }
 
+    /// Drift (seconds) below which a new sample is blended into the running clock
+    /// instead of replacing it. AppleScript jitter is a few tens of milliseconds;
+    /// snapping to every sample made the active line flicker at line boundaries.
+    nonisolated static let softCorrectionThreshold: TimeInterval = 0.3
+
+    /// Fraction of a small drift corrected per sample.
+    nonisolated static let softCorrectionFactor: Double = 0.35
+
     /// Called by the AppleScript polling timer.
-    func calibrate(position: TimeInterval, isPlaying: Bool) {
-        anchor = (Date(), position)
+    /// - Parameter sampledAt: When Spotify reported `position` (defaults to now).
+    func calibrate(position: TimeInterval, isPlaying: Bool, sampledAt: Date = Date()) {
+        anchor = Self.nextAnchor(
+            previous: anchor,
+            wasPlaying: self.isPlaying,
+            position: position,
+            isPlaying: isPlaying,
+            sampledAt: sampledAt
+        )
 
         // Only publish when play state actually changes to avoid unnecessary view rebuilds
         if self.isPlaying != isPlaying {
             self.isPlaying = isPlaying
             startTickTimer()
         }
+    }
+
+    /// Pure anchor update: hard re-anchor on seeks, pauses and track changes;
+    /// gently converge on small drift while playback runs continuously.
+    nonisolated static func nextAnchor(
+        previous: (date: Date, position: TimeInterval)?,
+        wasPlaying: Bool,
+        position: TimeInterval,
+        isPlaying: Bool,
+        sampledAt: Date
+    ) -> (date: Date, position: TimeInterval) {
+        guard let previous, wasPlaying, isPlaying else {
+            return (sampledAt, position)
+        }
+        let predicted = previous.position + sampledAt.timeIntervalSince(previous.date)
+        let drift = position - predicted
+        guard abs(drift) < softCorrectionThreshold else {
+            return (sampledAt, position)
+        }
+        return (sampledAt, predicted + drift * softCorrectionFactor)
     }
 
     func setTrackId(_ id: String?) {

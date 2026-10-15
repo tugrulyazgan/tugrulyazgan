@@ -15,7 +15,7 @@ struct PlaybackSyncEngineTests {
     @Test("paused lyrics changes update the index through the manager subscription")
     func lyricsChangeWhilePausedRecomputesIndex() async {
         let cache = Cache<String, SyncedLyrics>(memoryCountLimit: 10)
-        let manager = LyricsManager(cache: cache)
+        let manager = LyricsManager(cache: cache, translator: nil)
         manager.updateProviderSettings(ProviderSettings(entries: []))
         let engine = PlaybackSyncEngine()
         engine.lyricsManager = manager

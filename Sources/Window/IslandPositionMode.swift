@@ -22,8 +22,10 @@ extension UserDefaults {
 
     /// The appearance settings the island's size depends on, readable before
     /// `AppState` exists — the panel sizes itself while it is being created.
+    /// True when the compact island uses its two-row layout: the next-line
+    /// preview, or the translation line under the current lyric.
     var islandUsesDualLineLyrics: Bool {
-        bool(forKey: Keys.dualLineMode)
+        bool(forKey: Keys.dualLineMode) || TranslationSettings.isEnabled
     }
 
     var islandShowsArtwork: Bool {

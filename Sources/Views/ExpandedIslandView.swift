@@ -7,8 +7,17 @@ struct ExpandedIslandView: View {
     @ObservedObject var lyricsManager: LyricsManager
     @ObservedObject var appState: AppState
     @Environment(\.rootFontSize) private var rootFontSize
+    @Environment(\.translationColor) private var translationColor
 
-    private let visibleLineCount = 5
+    /// Five lines normally; four when the current line's translation takes a row.
+    private func visibleLineCount(showsTranslation: Bool) -> Int {
+        showsTranslation ? 4 : 5
+    }
+
+    private func translation(for index: Int, in lyrics: SyncedLyrics) -> String? {
+        guard appState.translationEnabled, lyrics.lines.indices.contains(index) else { return nil }
+        return lyrics.lines[index].translation
+    }
 
     var body: some View {
         VStack(spacing: 4) {
@@ -37,7 +46,12 @@ struct ExpandedIslandView: View {
 
             if let lyrics = lyricsManager.currentLyrics {
                 let currentIdx = syncEngine.currentLineIndex ?? 0
-                let range = contextRange(around: currentIdx, total: lyrics.lines.count)
+                let currentTranslation = translation(for: currentIdx, in: lyrics)
+                let range = contextRange(
+                    around: currentIdx,
+                    total: lyrics.lines.count,
+                    visible: visibleLineCount(showsTranslation: currentTranslation != nil)
+                )
 
                 ForEach(lyrics.lines[range]) { line in
                     let isCurrent = line.id == currentIdx
@@ -45,16 +59,31 @@ struct ExpandedIslandView: View {
                     let lineDirection: LayoutDirection = line.text.isRTL ? .rightToLeft : .leftToRight
 
                     if isCurrent {
-                        MarqueeText(
-                            text: line.text,
-                            font: .system(size: .rem(0.9375, root: rootFontSize), weight: .bold),
-                            color: appState.contentColor,
-                            loops: false,
-                            lineDuration: lineDuration(for: currentIdx, in: lyrics)
-                        )
-                        .frame(height: 20)
-                        .frame(maxWidth: .infinity, alignment: appState.resolvedLyricsAlignment)
-                        .environment(\.layoutDirection, lineDirection)
+                        VStack(spacing: 0) {
+                            MarqueeText(
+                                text: line.text,
+                                font: .system(size: .rem(0.9375, root: rootFontSize), weight: .bold),
+                                color: appState.contentColor,
+                                loops: false,
+                                lineDuration: lineDuration(for: currentIdx, in: lyrics)
+                            )
+                            .frame(height: 20)
+                            .frame(maxWidth: .infinity, alignment: appState.resolvedLyricsAlignment)
+                            .environment(\.layoutDirection, lineDirection)
+
+                            if let currentTranslation {
+                                MarqueeText(
+                                    text: currentTranslation,
+                                    font: .system(size: .rem(0.75, root: rootFontSize), weight: .medium),
+                                    color: translationColor,
+                                    loops: false,
+                                    lineDuration: lineDuration(for: currentIdx, in: lyrics)
+                                )
+                                .frame(height: 18)
+                                .frame(maxWidth: .infinity, alignment: appState.resolvedLyricsAlignment)
+                                .environment(\.layoutDirection, currentTranslation.isRTL ? .rightToLeft : .leftToRight)
+                            }
+                        }
                         .transition(.push(from: .bottom))
                     } else {
                         Text(line.text)
@@ -82,11 +111,11 @@ struct ExpandedIslandView: View {
         .animation(.smooth(duration: 0.35), value: syncEngine.currentLineIndex)
     }
 
-    private func contextRange(around index: Int, total: Int) -> ClosedRange<Int> {
-        let half = visibleLineCount / 2
+    private func contextRange(around index: Int, total: Int, visible: Int) -> ClosedRange<Int> {
+        let half = visible / 2
         let start = max(0, index - half)
-        let end = min(total - 1, start + visibleLineCount - 1)
-        let adjustedStart = max(0, end - visibleLineCount + 1)
+        let end = min(total - 1, start + visible - 1)
+        let adjustedStart = max(0, end - visible + 1)
         return adjustedStart ... end
     }
 

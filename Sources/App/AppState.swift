@@ -49,6 +49,26 @@ final class AppState: ObservableObject {
         didSet { UserDefaults.standard.set(solidColorHex, forKey: "solidColorHex") }
     }
 
+    /// Show a translated line (default Turkish) under each lyric line.
+    @Published var translationEnabled: Bool {
+        didSet { UserDefaults.standard.set(translationEnabled, forKey: TranslationSettings.Keys.enabled) }
+    }
+
+    /// Hex color of the translated line (default yellow).
+    @Published var translationColorHex: String {
+        didSet { UserDefaults.standard.set(translationColorHex, forKey: TranslationSettings.Keys.colorHex) }
+    }
+
+    var translationColor: Color {
+        Color(hex: translationColorHex) ?? .yellow
+    }
+
+    /// The compact island needs its taller two-row layout for either the
+    /// next-line preview or the translation line.
+    var usesTwoRowCompact: Bool {
+        dualLineMode || translationEnabled
+    }
+
     /// Resolved SwiftUI Color from the stored hex string.
     var solidColor: Color {
         Color(hex: solidColorHex) ?? Color(white: 0.08)
@@ -66,7 +86,12 @@ final class AppState: ObservableObject {
             "backgroundStyle": "solid",
             "solidColorHex": "#141414",
             "rootFontSize": 16.0,
+            TranslationSettings.Keys.enabled: true,
+            TranslationSettings.Keys.language: TranslationSettings.defaultLanguage,
+            TranslationSettings.Keys.colorHex: TranslationSettings.defaultColorHex,
         ])
+        translationEnabled = UserDefaults.standard.bool(forKey: TranslationSettings.Keys.enabled)
+        translationColorHex = TranslationSettings.colorHex
         showArtwork = UserDefaults.standard.bool(forKey: "showArtwork")
         lyricsAlignment = UserDefaults.standard.string(forKey: "lyricsAlignment") ?? "center"
         backgroundStyle = BackgroundStyle(rawValue: UserDefaults.standard.string(forKey: "backgroundStyle") ?? "solid") ?? .solid
@@ -93,6 +118,10 @@ final class AppState: ObservableObject {
                 let newFontSize = UserDefaults.standard.double(forKey: "rootFontSize")
                 let resolvedFontSize = newFontSize > 0 ? newFontSize : 16.0
                 if rootFontSize != resolvedFontSize { rootFontSize = resolvedFontSize }
+                let newTranslationEnabled = UserDefaults.standard.bool(forKey: TranslationSettings.Keys.enabled)
+                if translationEnabled != newTranslationEnabled { translationEnabled = newTranslationEnabled }
+                let newTranslationHex = TranslationSettings.colorHex
+                if translationColorHex != newTranslationHex { translationColorHex = newTranslationHex }
             }
     }
 

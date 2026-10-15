@@ -54,14 +54,25 @@ final class LyricsManager: ObservableObject {
         return allProviders.filter { enabledIds.contains($0.name) }
     }
 
-    init(cache: Cache<String, SyncedLyrics> = Cache(
-        memoryCountLimit: 200,
-        namespace: "Lyrics",
-        diskLimitBytes: 50 * 1024 * 1024,
-        serializer: CodableCacheSerializer<SyncedLyrics>()
-    )) {
+    init(
+        cache: Cache<String, SyncedLyrics> = Cache(
+            memoryCountLimit: 200,
+            namespace: "Lyrics",
+            diskLimitBytes: 50 * 1024 * 1024,
+            serializer: CodableCacheSerializer<SyncedLyrics>()
+        ),
+        translator: LyricsTranslator? = LyricsTranslator()
+    ) {
         self.cache = cache
+        self.translator = translator
         providerSettings = ProviderSettings.load()
+        appliedTranslationConfig = Self.currentTranslationConfig
+        translationSettingsObserver = NotificationCenter.default
+            .publisher(for: UserDefaults.didChangeNotification)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in self?.translationSettingsMayHaveChanged() }
+            }
     }
 
     func updateProviderSettings(_ settings: ProviderSettings) {
@@ -74,12 +85,14 @@ final class LyricsManager: ObservableObject {
     func loadLyrics(for track: TrackInfo) async {
         currentTrack = track
         // Clear stale lyrics immediately so the UI never shows the previous track's lyrics
+        translationTask?.cancel()
+        untranslatedLines = nil
         currentLyrics = nil
 
         // Check cache (memory -> disk)
         if let cached = await cache.get(track.id) {
             logDebug("Lyrics cache hit for: \(track.title) — \(track.artist)")
-            currentLyrics = cached
+            showLyrics(cached)
             return
         }
 
@@ -94,7 +107,7 @@ final class LyricsManager: ObservableObject {
                 if let lyrics = try await provider.fetchLyrics(for: track) {
                     logInfo("Override provider \(provider.name) found lyrics for: \(track.title)")
                     await cache.set(lyrics, forKey: track.id)
-                    currentLyrics = lyrics
+                    showLyrics(lyrics)
                     return
                 }
             } catch {
@@ -107,7 +120,7 @@ final class LyricsManager: ObservableObject {
         if let best {
             logInfo("Best lyrics via \(best.provider) (score \(String(format: "%.1f", best.score))) for: \(track.title)")
             await cache.set(best.lyrics, forKey: track.id)
-            currentLyrics = best.lyrics
+            showLyrics(best.lyrics)
         } else {
             logWarning("No lyrics found for: \(track.title) — \(track.artist)")
             currentLyrics = nil
@@ -184,7 +197,7 @@ final class LyricsManager: ObservableObject {
     /// Apply user-selected lyrics: update current display, cache, and per-track override.
     func applySelectedLyrics(_ lyrics: SyncedLyrics, fromProvider provider: String) async {
         guard let track = currentTrack else { return }
-        currentLyrics = lyrics
+        showLyrics(lyrics)
         await cache.set(lyrics, forKey: track.id)
         TrackLyricsOverride.setPreferredProvider(provider, for: track.id)
         logInfo("User selected lyrics from \(provider) for: \(track.title)")
@@ -192,5 +205,71 @@ final class LyricsManager: ObservableObject {
 
     func clearCache() async {
         await cache.removeAll()
+    }
+
+    // MARK: - Translation
+
+    private let translator: LyricsTranslator?
+    private var translationTask: Task<Void, Never>?
+    private var translationSettingsObserver: AnyCancellable?
+
+    /// Provider lines before translations were merged in, so turning the feature
+    /// off (or switching language) restores the original translations.
+    private var untranslatedLines: [LyricLine]?
+
+    private struct TranslationConfig: Equatable {
+        let enabled: Bool
+        let language: String
+    }
+
+    private var appliedTranslationConfig: TranslationConfig
+
+    private static var currentTranslationConfig: TranslationConfig {
+        TranslationConfig(enabled: TranslationSettings.isEnabled, language: TranslationSettings.targetLanguage)
+    }
+
+    /// Display newly loaded provider lyrics, then fetch their translation in the background.
+    private func showLyrics(_ lyrics: SyncedLyrics) {
+        untranslatedLines = lyrics.lines
+        currentLyrics = lyrics
+        translateCurrentLyrics()
+    }
+
+    private func translationSettingsMayHaveChanged() {
+        let config = Self.currentTranslationConfig
+        guard config != appliedTranslationConfig else { return }
+        appliedTranslationConfig = config
+
+        // Restore provider lines (keeping the user's offset), then re-translate if enabled.
+        if let lines = untranslatedLines, let lyrics = currentLyrics {
+            currentLyrics = SyncedLyrics(lines: lines, source: lyrics.source, globalOffset: lyrics.globalOffset)
+        }
+        translateCurrentLyrics()
+    }
+
+    private func translateCurrentLyrics() {
+        translationTask?.cancel()
+        guard let translator, TranslationSettings.isEnabled,
+              let lines = untranslatedLines, !lines.isEmpty,
+              let trackId = currentTrack?.id
+        else { return }
+
+        let target = TranslationSettings.targetLanguage
+        let texts = lines.map(\.text)
+        translationTask = Task { [weak self] in
+            guard let result = await translator.translate(texts, to: target),
+                  !Task.isCancelled,
+                  let self,
+                  self.currentTrack?.id == trackId,
+                  self.untranslatedLines?.map(\.text) == texts,
+                  TranslationSettings.isEnabled, TranslationSettings.targetLanguage == target,
+                  let lyrics = self.currentLyrics
+            else { return }
+            guard !result.translations.isEmpty else {
+                logInfo("[translate] Lyrics already in \(target), nothing to translate")
+                return
+            }
+            self.currentLyrics = lyrics.applyingTranslations(result.translations)
+        }
     }
 }

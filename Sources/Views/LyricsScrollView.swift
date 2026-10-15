@@ -8,6 +8,7 @@ struct LyricsScrollView: View {
     var alignment: Alignment = .leading
     @Environment(\.rootFontSize) private var rootFontSize
     @Environment(\.contentColor) private var contentColor
+    @Environment(\.translationColor) private var translationColor
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -23,7 +24,8 @@ struct LyricsScrollView: View {
                             distance: abs(line.id - currentLineIndex),
                             lineDuration: lineDuration(for: line.id),
                             rootFontSize: rootFontSize,
-                            contentColor: contentColor
+                            contentColor: contentColor,
+                            translationColor: translationColor
                         )
                         .frame(maxWidth: .infinity, alignment: alignment)
                         .environment(\.layoutDirection, line.text.isRTL ? .rightToLeft : .leftToRight)
@@ -61,6 +63,7 @@ private struct LyricLineRow: View, Equatable {
     let lineDuration: Double?
     let rootFontSize: CGFloat
     let contentColor: Color
+    let translationColor: Color
 
     var body: some View {
         VStack(spacing: 2) {
@@ -85,15 +88,15 @@ private struct LyricLineRow: View, Equatable {
                 if isCurrent {
                     MarqueeText(
                         text: translation,
-                        font: .system(size: .rem(0.6875, root: rootFontSize)),
-                        color: contentColor.opacity(0.7),
+                        font: .system(size: .rem(0.75, root: rootFontSize), weight: .medium),
+                        color: translationColor,
                         loops: false,
                         lineDuration: lineDuration
                     )
                 } else {
                     Text(translation)
                         .font(.system(size: .rem(0.6875, root: rootFontSize)))
-                        .foregroundStyle(contentColor.opacity(0.2))
+                        .foregroundStyle(translationColor.opacity(0.3))
                         .lineLimit(1)
                         .blur(radius: blurAmount)
                 }
