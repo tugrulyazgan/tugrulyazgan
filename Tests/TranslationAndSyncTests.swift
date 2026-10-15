@@ -144,3 +144,46 @@ struct PlainLyricsFallbackTests {
         #expect(PlainLyricsFallback.primaryArtist("Mark Forster & Lena") == "Mark Forster")
     }
 }
+
+struct WebLyricsScraperTests {
+    private let track = TrackInfo(id: "1", title: "Du hast", artist: "Rammstein", album: "Sehnsucht", durationMs: 234_000)
+
+    @Test("Genius lyrics containers are joined and headers/annotations removed")
+    func geniusHTML() throws {
+        let html = """
+        <html><body><div data-lyrics-container="true" class="Lyrics__Container">\
+        <div data-exclude-from-selection="true"><div>12 Contributors</div>Du hast Lyrics</div>\
+        [Strophe 1]<br/>Du<br><a href="/x"><span>Du hast</span></a><br/>Du hast mich</div>\
+        <div class="Other">ignore me</div>\
+        <div data-lyrics-container="true">Willst du bis der Tod euch sch&#x27;eidet<br/>Treu ihr sein f&#252;r alle Tage</div>
+        </body></html>
+        """
+        let text = try #require(WebLyricsScrapers.geniusLyrics(fromHTML: html))
+        #expect(text == "[Strophe 1]\nDu\nDu hast\nDu hast mich\nWillst du bis der Tod euch sch'eidet\nTreu ihr sein für alle Tage")
+    }
+
+    @Test("Genius search picks the matching song and skips translation pages")
+    func geniusSearch() throws {
+        let json = """
+        {"response":{"sections":[{"type":"top_hit","hits":[
+          {"type":"song","result":{"title":"Du hast (English Translation)","primary_artist":{"name":"Genius English Translations"},"url":"https://genius.com/translation"}}]},
+          {"type":"song","hits":[
+          {"type":"song","result":{"title":"Sonne","primary_artist":{"name":"Rammstein"},"url":"https://genius.com/sonne"}},
+          {"type":"song","result":{"title":"Du hast","primary_artist":{"name":"Rammstein"},"url":"https://genius.com/Rammstein-du-hast-lyrics"}}]}]}}
+        """
+        let url = WebLyricsScrapers.bestGeniusSongURL(fromSearch: Data(json.utf8), for: track)
+        #expect(url?.absoluteString == "https://genius.com/Rammstein-du-hast-lyrics")
+    }
+
+    @Test("Songtexte.com search links, page title and lyrics are parsed")
+    func songtexte() throws {
+        let search = #"<a href="songtext/rammstein/du-hast-23d4a4b3.html">Du hast</a><a href="/songtext/rammstein/du-hast-23d4a4b3.html">x</a>"#
+        #expect(WebLyricsScrapers.songtexteSongURLs(fromSearchHTML: search).map(\.absoluteString)
+            == ["https://www.songtexte.com/songtext/rammstein/du-hast-23d4a4b3.html"])
+
+        let page = #"<title>Du hast Songtext von Rammstein Lyrics</title><div id="lyrics">Du<br/>Du hast<br/>Du hast mich<br/><div class="x">Du hast mich gefragt</div></div>"#
+        let info = try #require(WebLyricsScrapers.songtexteTitleAndArtist(fromHTML: page))
+        #expect(info.title == "Du hast" && info.artist == "Rammstein")
+        #expect(WebLyricsScrapers.songtexteLyrics(fromHTML: page) == "Du\nDu hast\nDu hast mich\nDu hast mich gefragt")
+    }
+}

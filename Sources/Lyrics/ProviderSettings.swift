@@ -56,6 +56,9 @@ struct ProviderSettings: Codable, Equatable {
         "kugou": "KuGou",
         PlainLyricsFallback.lrclibSource: "LRCLIB ≈",
         PlainLyricsFallback.lyricsOvhSource: "lyrics.ovh ≈",
+        PlainLyricsFallback.musixmatchSource: "Musixmatch ≈",
+        PlainLyricsFallback.geniusSource: "Genius ≈",
+        PlainLyricsFallback.songtexteSource: "Songtexte.com ≈",
     ]
 
     static func displayName(for id: String) -> String {

@@ -3,9 +3,8 @@ import Foundation
 /// Last resort when no provider has *synced* lyrics: find plain (untimed) lyrics
 /// on the web and spread the lines over the song so they still scroll along.
 ///
-/// Sources, in order:
-/// 1. LRCLIB `plainLyrics` (exact match, then best search hit) — many tracks only have plain text there.
-/// 2. lyrics.ovh — a free plain-lyrics API with a different catalog.
+/// Sources, in order: LRCLIB `plainLyrics`, Musixmatch plain lyrics, Genius,
+/// Songtexte.com (strong German catalog), lyrics.ovh.
 ///
 /// Timings are estimates (weighted by line length, with pauses between stanzas);
 /// the user can nudge them with the existing offset controls.
@@ -14,16 +13,29 @@ enum PlainLyricsFallback {
     static let lrclibSource = "lrclib-plain"
     static let lyricsOvhSource = "lyricsovh-plain"
 
+    static let musixmatchSource = "musixmatch-plain"
+    static let geniusSource = "genius-plain"
+    static let songtexteSource = "songtexte-plain"
+
+    /// Sources tried in order; the first that returns text wins.
+    private static func sources(session: URLSession) -> [(id: String, fetch: (TrackInfo) async -> String?)] {
+        [
+            (lrclibSource, { await lrclibPlain(for: $0, session: session) }),
+            (musixmatchSource, { try? await MusixmatchProvider().fetchPlainLyrics(for: $0) }),
+            (geniusSource, { await WebLyricsScrapers.genius(for: $0, session: session) }),
+            (songtexteSource, { await WebLyricsScrapers.songtexte(for: $0, session: session) }),
+            (lyricsOvhSource, { await lyricsOvh(for: $0, session: session) }),
+        ]
+    }
+
     static func fetch(for track: TrackInfo, session: URLSession = .shared) async -> SyncedLyrics? {
-        if let text = await lrclibPlain(for: track, session: session),
-           let lyrics = estimatedLyrics(from: text, durationSeconds: track.durationSeconds, source: lrclibSource) {
-            logInfo("[plain] LRCLIB plain lyrics for: \(track.title)")
-            return lyrics
-        }
-        if let text = await lyricsOvh(for: track, session: session),
-           let lyrics = estimatedLyrics(from: text, durationSeconds: track.durationSeconds, source: lyricsOvhSource) {
-            logInfo("[plain] lyrics.ovh lyrics for: \(track.title)")
-            return lyrics
+        for source in sources(session: session) {
+            if Task.isCancelled { return nil }
+            if let text = await source.fetch(track),
+               let lyrics = estimatedLyrics(from: text, durationSeconds: track.durationSeconds, source: source.id) {
+                logInfo("[plain] \(source.id) lyrics for: \(track.title)")
+                return lyrics
+            }
         }
         logInfo("[plain] No plain lyrics found for: \(track.title) — \(track.artist)")
         return nil

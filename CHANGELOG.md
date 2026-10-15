@@ -4,7 +4,7 @@
 
 ### Added
 
-- When no provider has synced lyrics, plain lyrics are looked up on the web (LRCLIB plain text, then lyrics.ovh) and spread over the song with estimated timing, so they still scroll and get translated. The source is marked with "≈".
+- When no provider has synced lyrics, plain lyrics are looked up on the web (LRCLIB plain text, Musixmatch plain lyrics, Genius, Songtexte.com, then lyrics.ovh) and spread over the song with estimated timing, so they still scroll and get translated. The source is marked with "≈".
 - Translation line under each lyric (default: Turkish, shown in yellow). Lines are translated with Google Translate, de-duplicated and cached per song. Toggle, target language and color live in Settings → Lyrics → Translation.
 
 ### Fixed

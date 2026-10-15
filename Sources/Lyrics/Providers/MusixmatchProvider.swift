@@ -71,7 +71,18 @@ final class MusixmatchProvider: LyricsProvider, @unchecked Sendable {
     }
 
     func searchLyrics(for track: TrackInfo, limit _: Int = 5) async throws -> [LyricsSearchResult] {
-        // Try macro.subtitles.get which returns richsync + subtitle + plain lyrics
+        let data = try await requestWithRetry(path: "macro.subtitles.get", queryItems: macroQueryItems(for: track))
+        return try parseMacroResponse(data, for: track).map { [$0] } ?? []
+    }
+
+    /// Unsynced lyrics text for the track, used by `PlainLyricsFallback` when nobody has synced lyrics.
+    func fetchPlainLyrics(for track: TrackInfo) async throws -> String? {
+        let data = try await requestWithRetry(path: "macro.subtitles.get", queryItems: macroQueryItems(for: track))
+        return try parsePlainLyrics(data, for: track)
+    }
+
+    /// macro.subtitles.get returns richsync + subtitle + plain lyrics in one call.
+    private func macroQueryItems(for track: TrackInfo) -> [URLQueryItem] {
         let durationSec = Int(track.durationSeconds)
         let queryItems = [
             URLQueryItem(name: "namespace", value: "lyrics_richsynched"),
@@ -86,9 +97,7 @@ final class MusixmatchProvider: LyricsProvider, @unchecked Sendable {
             URLQueryItem(name: "app_id", value: appId),
             URLQueryItem(name: "t", value: String(Int.random(in: 1000 ... 9999))),
         ]
-
-        let data = try await requestWithRetry(path: "macro.subtitles.get", queryItems: queryItems)
-        return try parseMacroResponse(data, for: track).map { [$0] } ?? []
+        return queryItems
     }
 
     // MARK: - Token Management
@@ -265,6 +274,41 @@ final class MusixmatchProvider: LyricsProvider, @unchecked Sendable {
             score: score,
             confidence: confidence
         )
+    }
+
+    /// Plain (unsynced) lyrics from a macro.subtitles.get response, if the matched track fits.
+    func parsePlainLyrics(_ data: Data, for track: TrackInfo) throws -> String? {
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let message = json["message"] as? [String: Any],
+              let body = message["body"] as? [String: Any],
+              let macroCalls = body["macro_calls"] as? [String: Any],
+              let matcher = macroCalls["matcher.track.get"] as? [String: Any],
+              let matcherMessage = matcher["message"] as? [String: Any],
+              let matcherBody = matcherMessage["body"] as? [String: Any],
+              let matched = matcherBody["track"] as? [String: Any],
+              let title = matched["track_name"] as? String,
+              let artist = matched["artist_name"] as? String,
+              let lyricsGet = macroCalls["track.lyrics.get"] as? [String: Any],
+              let lyricsMessage = lyricsGet["message"] as? [String: Any],
+              let lyricsBody = lyricsMessage["body"] as? [String: Any],
+              let lyrics = lyricsBody["lyrics"] as? [String: Any],
+              let text = lyrics["lyrics_body"] as? String
+        else {
+            return nil
+        }
+        // No timing to sanity-check plain text, so require a solid metadata match (decoy tracks exist).
+        let candidate = TrackMatcher.Candidate(
+            title: title, artist: artist, album: matched["album_name"] as? String, durationMs: nil
+        )
+        guard TrackMatcher.score(target: track, candidate: candidate).confidence >= .medium else { return nil }
+
+        // Drop the "not for commercial use" footer and the tracking id line that may follow the text.
+        let cleaned = text.components(separatedBy: .newlines)
+            .prefix { !$0.contains("This Lyrics is NOT for Commercial use") }
+            .joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let isInstrumental = (lyrics["instrumental"] as? Int ?? 0) == 1
+        return cleaned.isEmpty || isInstrumental ? nil : cleaned
     }
 
     /// Parse richsync JSON: array of objects with `ts` (start), `te` (end), `x` (text).
