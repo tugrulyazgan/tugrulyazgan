@@ -6,6 +6,9 @@ import SwiftUI
 final class LyricTapTargets {
     static let shared = LyricTapTargets()
 
+    /// Coordinate space on the island's root view, which fills the panel's hosting view.
+    static let coordinateSpace = "islandRoot"
+
     struct Row: Equatable {
         /// Frame in the hosting view's (top-left origin) coordinates.
         let frame: CGRect
@@ -42,7 +45,7 @@ extension View {
         background(GeometryReader { geo in
             Color.clear.preference(
                 key: LyricRowFramesKey.self,
-                value: [id: LyricTapTargets.Row(frame: geo.frame(in: .global), time: time)]
+                value: [id: LyricTapTargets.Row(frame: geo.frame(in: .named(LyricTapTargets.coordinateSpace)), time: time)]
             )
         })
     }

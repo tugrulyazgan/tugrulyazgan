@@ -35,6 +35,8 @@ struct IslandContentView: View {
                 standardBody
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .coordinateSpace(name: LyricTapTargets.coordinateSpace)
         .environment(\.rootFontSize, appState.rootFontSize)
         .environment(\.contentColor, appState.contentColor)
         .environment(\.translationColor, appState.translationColor)

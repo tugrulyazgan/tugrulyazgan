@@ -52,8 +52,10 @@ struct LyricsScrollView: View {
             }
             .background(GeometryReader { geo in
                 Color.clear
-                    .onAppear { LyricTapTargets.shared.visibleArea = geo.frame(in: .global) }
-                    .onChange(of: geo.frame(in: .global)) { _, frame in LyricTapTargets.shared.visibleArea = frame }
+                    .onAppear { LyricTapTargets.shared.visibleArea = geo.frame(in: .named(LyricTapTargets.coordinateSpace)) }
+                    .onChange(of: geo.frame(in: .named(LyricTapTargets.coordinateSpace))) { _, frame in
+                        LyricTapTargets.shared.visibleArea = frame
+                    }
             })
             .onDisappear { LyricTapTargets.shared.clear() }
             .onAppear {
