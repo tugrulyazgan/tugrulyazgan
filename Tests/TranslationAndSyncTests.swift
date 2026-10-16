@@ -252,3 +252,22 @@ struct TapToSyncTests {
         #expect(shifted.lineIndex(at: 27.1) == 4) // keeps following from there
     }
 }
+
+struct LyricTapTargetTests {
+    @Test("clicks resolve to the row under them, only inside the visible lyrics area")
+    func hitTesting() {
+        let targets = LyricTapTargets()
+        targets.visibleArea = CGRect(x: 0, y: 50, width: 300, height: 200)
+        targets.rows = [
+            0: .init(frame: CGRect(x: 0, y: 20, width: 300, height: 24), time: 1),
+            1: .init(frame: CGRect(x: 0, y: 60, width: 300, height: 24), time: 5),
+            2: .init(frame: CGRect(x: 0, y: 90, width: 300, height: 24), time: 9),
+        ]
+        #expect(targets.lineTime(at: CGPoint(x: 100, y: 70)) == 5)
+        #expect(targets.lineTime(at: CGPoint(x: 100, y: 100)) == 9)
+        #expect(targets.lineTime(at: CGPoint(x: 100, y: 30)) == nil) // scrolled out of view
+        #expect(targets.lineTime(at: CGPoint(x: 100, y: 240)) == nil) // empty space
+        targets.clear()
+        #expect(targets.lineTime(at: CGPoint(x: 100, y: 70)) == nil)
+    }
+}

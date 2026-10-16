@@ -228,8 +228,13 @@ final class DynamicIslandPanel: NSPanel {
             let distance = hypot(end.x - origin.x, end.y - origin.y)
 
             if distance < 5 {
-                // Click — toggle island state
-                NotificationCenter.default.post(name: .islandTapped, object: nil)
+                if let lineTime = clickedLyricLineTime(event) {
+                    // Click on a lyric line in the full view — re-sync lyrics to it
+                    NotificationCenter.default.post(name: .lyricsSyncToLine, object: lineTime)
+                } else {
+                    // Click — toggle island state
+                    NotificationCenter.default.post(name: .islandTapped, object: nil)
+                }
             } else if isDragUnlocked {
                 // Drag ended — snap back to attached if near top, otherwise save detached position
                 if isNearAttachedPosition() {
@@ -247,6 +252,14 @@ final class DynamicIslandPanel: NSPanel {
         mouseDownOrigin = nil
         windowOriginOnMouseDown = nil
         isDragUnlocked = false
+    }
+
+    /// Start time of the lyric line under the click, if the full lyrics view is showing one there.
+    private func clickedLyricLineTime(_ event: NSEvent) -> TimeInterval? {
+        // The SwiftUI hosting view is flipped (top-left origin), matching SwiftUI's global frames.
+        guard let hostingView = contentView?.subviews.first else { return nil }
+        let point = hostingView.convert(event.locationInWindow, from: nil)
+        return LyricTapTargets.shared.lineTime(at: point)
     }
 
     override func orderFront(_ sender: Any?) {
