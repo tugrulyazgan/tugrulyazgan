@@ -228,13 +228,8 @@ final class DynamicIslandPanel: NSPanel {
             let distance = hypot(end.x - origin.x, end.y - origin.y)
 
             if distance < 5 {
-                if let lineTime = clickedLyricLineTime(event) {
-                    // Click on a lyric line in the full view — re-sync lyrics to it
-                    NotificationCenter.default.post(name: .lyricsSyncToLine, object: lineTime)
-                } else {
-                    // Click — toggle island state
-                    NotificationCenter.default.post(name: .islandTapped, object: nil)
-                }
+                // Click — toggle island state
+                NotificationCenter.default.post(name: .islandTapped, object: nil)
             } else if isDragUnlocked {
                 // Drag ended — snap back to attached if near top, otherwise save detached position
                 if isNearAttachedPosition() {
@@ -252,6 +247,36 @@ final class DynamicIslandPanel: NSPanel {
         mouseDownOrigin = nil
         windowOriginOnMouseDown = nil
         isDragUnlocked = false
+    }
+
+    /// Where the current left click started (screen coordinates), for click-to-sync.
+    private var clickStartLocation: NSPoint?
+
+    /// Clicks on a lyric line in the full view re-sync the lyrics to that line. Caught here,
+    /// before any view (e.g. the lyrics scroll view) can swallow the click.
+    override func sendEvent(_ event: NSEvent) {
+        switch event.type {
+        case .leftMouseDown:
+            clickStartLocation = NSEvent.mouseLocation
+        case .leftMouseUp:
+            defer { clickStartLocation = nil }
+            if let start = clickStartLocation,
+               hypot(NSEvent.mouseLocation.x - start.x, NSEvent.mouseLocation.y - start.y) < 5,
+               let lineTime = clickedLyricLineTime(event) {
+                // Cancel the pending tap/drag so the island doesn't also change size.
+                longPressTimer?.invalidate()
+                longPressTimer = nil
+                mouseDownOrigin = nil
+                windowOriginOnMouseDown = nil
+                isDragUnlocked = false
+                isForwardingToControl = false
+                NotificationCenter.default.post(name: .lyricsSyncToLine, object: lineTime)
+                return
+            }
+        default:
+            break
+        }
+        super.sendEvent(event)
     }
 
     /// Start time of the lyric line under the click, if the full lyrics view is showing one there.
