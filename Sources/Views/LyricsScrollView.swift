@@ -45,19 +45,9 @@ struct LyricsScrollView: View {
                     Spacer(minLength: 40)
                 }
                 .padding(.horizontal, 20)
-                // Clicking a line says "the singer is here now" (handled by DynamicIslandPanel).
-                .onPreferenceChange(LyricRowFramesKey.self) { rows in
-                    LyricTapTargets.shared.rows = rows
-                }
             }
-            .background(GeometryReader { geo in
-                Color.clear
-                    .onAppear { LyricTapTargets.shared.visibleArea = geo.frame(in: .named(LyricTapTargets.coordinateSpace)) }
-                    .onChange(of: geo.frame(in: .named(LyricTapTargets.coordinateSpace))) { _, frame in
-                        LyricTapTargets.shared.visibleArea = frame
-                    }
-            })
-            .onDisappear { LyricTapTargets.shared.clear() }
+            // Clicking a line says "the singer is here now" (handled by DynamicIslandPanel).
+            .lyricTapArea(owner: "full")
             .onAppear {
                 proxy.scrollTo(currentLineIndex, anchor: .center)
             }

@@ -281,10 +281,15 @@ final class DynamicIslandPanel: NSPanel {
 
     /// Start time of the lyric line under the click, if the full lyrics view is showing one there.
     private func clickedLyricLineTime(_ event: NSEvent) -> TimeInterval? {
-        // The SwiftUI hosting view is flipped (top-left origin), matching SwiftUI's global frames.
-        guard let hostingView = contentView?.subviews.first else { return nil }
-        let point = hostingView.convert(event.locationInWindow, from: nil)
-        return LyricTapTargets.shared.lineTime(at: point)
+        guard let contentView else { return nil }
+        // SwiftUI frames use a top-left origin; window coordinates use bottom-left.
+        let inWindow = event.locationInWindow
+        let topLeft = CGPoint(x: inWindow.x, y: contentView.bounds.height - inWindow.y)
+        if let time = LyricTapTargets.shared.lineTime(at: topLeft) { return time }
+        // Fallback in case the frames turn out to be bottom-left based.
+        if let time = LyricTapTargets.shared.lineTime(at: inWindow) { return time }
+        logDebug("[tap] No lyric line at \(topLeft) — targets: \(LyricTapTargets.shared.debugSummary)")
+        return nil
     }
 
     override func orderFront(_ sender: Any?) {

@@ -84,6 +84,7 @@ struct ExpandedIslandView: View {
                                 .environment(\.layoutDirection, currentTranslation.isRTL ? .rightToLeft : .leftToRight)
                             }
                         }
+                        .lyricTapTarget(id: line.id, time: line.time)
                         .transition(.push(from: .bottom))
                     } else {
                         Text(line.text)
@@ -97,6 +98,7 @@ struct ExpandedIslandView: View {
                             .frame(height: 20)
                             .frame(maxWidth: .infinity, alignment: appState.resolvedLyricsAlignment)
                             .environment(\.layoutDirection, lineDirection)
+                            .lyricTapTarget(id: line.id, time: line.time)
                             .transition(.push(from: .bottom))
                     }
                 }
@@ -108,6 +110,8 @@ struct ExpandedIslandView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        // Clicking a line says "the singer is here now" (handled by DynamicIslandPanel).
+        .lyricTapArea(owner: "expanded")
         .animation(.smooth(duration: 0.35), value: syncEngine.currentLineIndex)
     }
 
