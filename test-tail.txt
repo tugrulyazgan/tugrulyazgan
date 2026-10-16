@@ -1,0 +1,150 @@
+✔ Test "Genius lyrics containers are joined and headers/annotations removed" passed after 0.016 seconds.
+✔ Test "Compact island uses Dynamic Island-sized width" passed after 0.017 seconds.
+✔ Test "reuses a stored token across launches and ignores a placeholder one" passed after 0.017 seconds.
+✔ Test "rejects the placeholder token issued to retired client identities" passed after 0.017 seconds.
+✔ Test "CodableCacheSerializer round-trip" passed after 0.017 seconds.
+✔ Test "rejects lyrics when Musixmatch matched a different track" passed after 0.017 seconds.
+✔ Test "waits out the retry interval after token.get refused a token" passed after 0.017 seconds.
+✔ Test "scores the matched metadata instead of reporting a perfect match" passed after 0.017 seconds.
+✔ Test "accepts a localized title when artist, album and duration match" passed after 0.017 seconds.
+✔ Test "accepts lyrics when the matched track is the playing track" passed after 0.017 seconds.
+✔ Test "millisecond position is converted to seconds" passed after 0.017 seconds.
+✔ Test "a position already in milliseconds is scaled down once" passed after 0.017 seconds.
+✔ Test "falls back to subtitle_length when track_length is 0" passed after 0.017 seconds.
+✔ Test "Attached island is centered horizontally and flush with the screen top" passed after 0.017 seconds.
+✔ Test "parses dot and comma decimal separators" passed after 0.017 seconds.
+✔ Test "Attached origin follows the screen it is given" passed after 0.017 seconds.
+✔ Test "equal scores follow registry order regardless of arrival order" passed after 0.017 seconds.
+✔ Test "Detached fallback sits below the menu bar with a gap" passed after 0.017 seconds.
+✔ Test "A wider panel re-centers instead of keeping the old origin" passed after 0.017 seconds.
+✔ Test "Parses standard LRC lines with two-digit centiseconds" passed after 0.017 seconds.
+✔ Test "a higher score wins over registry order" passed after 0.019 seconds.
+✔ Test "Returns empty array for invalid input" passed after 0.019 seconds.
+✔ Test "Parses three-digit milliseconds" passed after 0.019 seconds.
+✔ Test "Returns lines sorted by time" passed after 0.019 seconds.
+✔ Test "Skips blank text lines" passed after 0.018 seconds.
+✔ Test "Merges translations by matching time" passed after 0.018 seconds.
+✔ Test "Empty string is not RTL" passed after 0.018 seconds.
+✔ Test "Hebrew text is detected as RTL" passed after 0.018 seconds.
+✔ Test "English text is detected as LTR" passed after 0.018 seconds.
+✔ Test "Symbols-only string is not RTL" passed after 0.018 seconds.
+✔ Test "Persian text is detected as RTL" passed after 0.018 seconds.
+✔ Test "Arabic text is detected as RTL" passed after 0.051 seconds.
+✔ Test "Japanese text is detected as LTR" passed after 0.051 seconds.
+✔ Test "Panel stays on screen when neither side has room" passed after 0.051 seconds.
+✔ Test "Panel opens to the right of the window with the tops aligned" passed after 0.051 seconds.
+✔ Test "Origins are expressed in the coordinate space of the given screen" passed after 0.051 seconds.
+✔ Test "Panel flips to the left when it would overflow the right edge" passed after 0.051 seconds.
+✔ Test "Panel is pushed down when the window sits near the top edge" passed after 0.051 seconds.
+✔ Test "first sample, pauses and resumes re-anchor exactly" passed after 0.051 seconds.
+✔ Test "Every category has a localized title and an SF Symbol" passed after 0.051 seconds.
+✔ Test "Sidebar lists every category in a stable order" passed after 0.051 seconds.
+✔ Test "small jitter is blended, not snapped" passed after 0.051 seconds.
+✔ Test "Category identifiers are unique" passed after 0.051 seconds.
+✔ Test "seeks snap immediately" passed after 0.051 seconds.
+✔ Test "word timings drive progress word by word" passed after 0.051 seconds.
+✔ Test "Chinese text is detected as LTR" passed after 0.051 seconds.
+✔ Test "fractional durations still count toward the score" passed after 0.051 seconds.
+✔ Test "Musixmatch richsync words are parsed" passed after 0.051 seconds.
+✔ Test "ranks every hit before applying the limit" passed after 0.051 seconds.
+✔ Test "without word timing a line fills over its estimated singing time" passed after 0.051 seconds.
+✔ Test "Duration exact match is perfect" passed after 0.051 seconds.
+✔ Test "XOR key has 16 bytes" passed after 0.051 seconds.
+✔ Test "decrypt returns nil for empty or too-short input" passed after 0.051 seconds.
+✔ Test "singing time never exceeds the gap to the next line" passed after 0.051 seconds.
+✔ Test "Title with bracket suffix still matches well" passed after 0.051 seconds.
+✔ Test "Different track yields noMatch or veryLow" passed after 0.051 seconds.
+✔ Test "Exact match yields perfect confidence" passed after 0.051 seconds.
+✔ Test "Duration within 300ms is veryHigh" passed after 0.051 seconds.
+✔ Test "Name comparison is case-insensitive" passed after 0.051 seconds.
+✔ Test "Multiple artists with shared member scores well" passed after 0.051 seconds.
+✔ Test "default has all six providers enabled in correct order" passed after 0.051 seconds.
+✔ Test "load returns default when UserDefaults key is absent" passed after 0.051 seconds.
+✔ Test "Every string key has translations for all supported languages" passed after 0.068 seconds.
+✔ Test "load removes providers that no longer exist" passed after 0.068 seconds.
+✔ Test "Returns nil before first line" passed after 0.067 seconds.
+✔ Test "Returns exact match on middle line" passed after 0.067 seconds.
+✔ Test "Returns last line after all timestamps" passed after 0.067 seconds.
+✔ Test "Respects global offset" passed after 0.067 seconds.
+✔ Test "Returns first line at exact time" passed after 0.068 seconds.
+✔ Test "Returns correct line between timestamps" passed after 0.067 seconds.
+✔ Test "value(forKey:fetch:) returns cached value without calling fetch" passed after 0.067 seconds.
+✔ Test "Memory get/set round-trip" passed after 0.067 seconds.
+✔ Test "load merges new providers not present in stored settings" passed after 0.068 seconds.
+✔ Test "clicking a line makes it the active line at the current position" passed after 0.067 seconds.
+✔ Test "removeAll clears memory cache" passed after 0.067 seconds.
+✔ Test "Memory cache returns nil for missing key" passed after 0.067 seconds.
+✔ Test "Notch-hugging size spans both ears plus the notch width" passed after 0.067 seconds.
+✔ Test "Notch-hugging layout only applies to compact + attached + measurable notch" passed after 0.067 seconds.
+✔ Test "notchWidth is the gap between the two auxiliary top areas" passed after 0.067 seconds.
+✔ Test "empty text yields no lyrics" passed after 0.067 seconds.
+✔ Test "Notch-hugging height grows with a taller (dual-line) lyrics row" passed after 0.067 seconds.
+✔ Test "plain lyrics are spread over the song in order, skipping headers" passed after 0.067 seconds.
+✔ Test "batches respect the character budget" passed after 0.067 seconds.
+✔ Test "Disk persistence round-trip with Codable serializer" passed after 0.068 seconds.
+✔ Test "titles and artists are cleaned for searching" passed after 0.067 seconds.
+✔ Test "translations are applied to matching lines, keeping timing" passed after 0.067 seconds.
+✔ Test "rejects malformed responses" passed after 0.067 seconds.
+✔ Test "dedupes repeated lines and skips symbol-only lines" passed after 0.067 seconds.
+✔ Test "parses Google gtx response with newline-joined lines" passed after 0.067 seconds.
+✔ Test "save and load round-trip preserves order and enabled state" passed after 0.068 seconds.
+✔ Test "extractJSON returns raw JSON unchanged" passed after 0.067 seconds.
+✔ Test "language comparison ignores region subtags" passed after 0.067 seconds.
+✔ Test "extractJSON strips callback with semicolon" passed after 0.067 seconds.
+✔ Test "notchWidth is nil when an auxiliary area is missing" passed after 0.067 seconds.
+✔ Test "extractJSON strips JSONP callback wrapper" passed after 0.067 seconds.
+✔ Test "identical translations are dropped" passed after 0.067 seconds.
+✔ Test "parse skips empty lines after tag stripping" passed after 0.062 seconds.
+✔ Test "parse returns sorted lines" passed after 0.062 seconds.
+✔ Test "parse extracts line timestamps and strips syllable tags" passed after 0.062 seconds.
+✔ Test "parse handles lines without syllable tags" passed after 0.062 seconds.
+✔ Test "parse applies translations map" passed after 0.062 seconds.
+✔ Suite WebLyricsScraperTests passed after 0.094 seconds.
+✔ Suite LyricTapTargetTests passed after 0.094 seconds.
+✔ Suite IslandContentSizingTests passed after 0.094 seconds.
+✔ Suite CacheSerializerTests passed after 0.094 seconds.
+✔ Suite MusixmatchProviderTests passed after 0.094 seconds.
+✔ Suite AppleScriptNumberParsingTests passed after 0.094 seconds.
+✔ Suite IslandPlacementTests passed after 0.094 seconds.
+✔ Suite LyricsManagerTests passed after 0.094 seconds.
+✔ Suite LRCParserTests passed after 0.094 seconds.
+✔ Suite TextDirectionTests passed after 0.094 seconds.
+✔ Suite PanelPlacementTests passed after 0.094 seconds.
+✔ Suite PlaybackAnchorTests passed after 0.094 seconds.
+✔ Suite SettingsTabTests passed after 0.094 seconds.
+✔ Suite KaraokeProgressTests passed after 0.073 seconds.
+✔ Suite LRCLibProviderTests passed after 0.073 seconds.
+✔ Suite TrackMatcherTests passed after 0.073 seconds.
+✔ Suite KRCDecrypterTests passed after 0.073 seconds.
+✔ Suite ProviderSettingsTests passed after 0.073 seconds.
+✔ Suite LocalizationTests passed after 0.073 seconds.
+✔ Suite SyncedLyricsTests passed after 0.073 seconds.
+✔ Test "value(forKey:fetch:) calls fetch on miss and caches result" passed after 0.069 seconds.
+✔ Suite TapToSyncTests passed after 0.073 seconds.
+✔ Suite NotchHuggingLayoutTests passed after 0.073 seconds.
+✔ Suite PlainLyricsFallbackTests passed after 0.073 seconds.
+✔ Suite LyricsTranslatorTests passed after 0.073 seconds.
+✔ Suite QQMusicJSONPTests passed after 0.073 seconds.
+✔ Suite KRCParserTests passed after 0.073 seconds.
+✔ Test "A registry with no windows is empty" passed after 0.089 seconds.
+✔ Test "Re-opening an already-tracked window does not double-count it" passed after 0.089 seconds.
+✔ Test "Closing an untracked window leaves tracked windows alone" passed after 0.090 seconds.
+2026-10-16 11:27:43.820789+0000 Lyrisland[3428:14492] [app] 2026-10-16 11:27:43.821 [INFO] LyricsManager:114 — Loading lyrics for: test — test
+✔ Test "Closing one of two windows keeps the app in regular mode" passed after 0.089 seconds.
+✔ Suite AuxiliaryWindowRegistryTests passed after 0.114 seconds.
+✔ Test "paused lyrics changes update the index through the manager subscription" passed after 0.089 seconds.
+✔ Suite PlaybackSyncEngineTests passed after 0.093 seconds.
+2026-10-16 11:27:43.821112+0000 Lyrisland[3428:14491] [app] 2026-10-16 11:27:43.821 [WARN] LyricsManager:144 — No lyrics found for: test — test
+✔ Test "Fetch coalescing shares a single fetch across concurrent callers" passed after 0.117 seconds.
+✔ Suite CacheTests passed after 0.184 seconds.
+✔ Test run with 114 tests passed after 0.206 seconds.
+2026-10-16 11:27:44.406 xcodebuild[1408:6977] [MT] IDETestOperationsObserverDebug: 127.565 elapsed -- Testing started completed.
+2026-10-16 11:27:44.406 xcodebuild[1408:6977] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-16 11:27:44.406 xcodebuild[1408:6977] [MT] IDETestOperationsObserverDebug: 127.565 sec, +127.565 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/runner/Library/Developer/Xcode/DerivedData/Lyrisland-alcijmuroluzlyfdonbewueozhzx/Logs/Test/Test-LyrislandTests-2026.10.16_11-24-26-+0000.xcresult
+
+** TEST SUCCEEDED **
+
+Testing started
