@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Lyrisland</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lyrisland">
+<meta name="theme-color" content="#0b0b0d">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root {
+    --bg: #0b0b0d;
+    --fg: #ffffff;
+    --dim: rgba(255, 255, 255, 0.38);
+    --muted: rgba(255, 255, 255, 0.55);
+    --card: rgba(255, 255, 255, 0.07);
+    --line: rgba(255, 255, 255, 0.12);
+    --accent: #1ed760;
+    --tr: #ffd60a;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+  body { overflow: hidden; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+  .hidden { display: none !important; }
+
+  /* Backdrop tinted by the album art */
+  #backdrop { position: fixed; inset: -40px; background-size: cover; background-position: center;
+    filter: blur(60px) saturate(1.4) brightness(0.35); opacity: 0; transition: opacity .8s; z-index: 0; }
+  #backdrop.on { opacity: 1; }
+
+  #app { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; }
+
+  header { display: flex; align-items: center; gap: 12px;
+    padding: calc(var(--safe-top) + 10px) 16px 10px; }
+  #art { width: 52px; height: 52px; border-radius: 10px; background: var(--card); object-fit: cover; flex: none; }
+  .meta { flex: 1; min-width: 0; }
+  #title { font-weight: 700; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #artist { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #source { display: inline-block; margin-top: 3px; font-size: 11px; color: var(--muted);
+    background: var(--card); border-radius: 99px; padding: 1px 8px; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--card);
+    display: grid; place-items: center; flex: none; }
+  .icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+  /* Lyrics */
+  #lyrics { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 30vh 20px 45vh;
+    -webkit-mask-image: linear-gradient(transparent, #000 12%, #000 80%, transparent);
+            mask-image: linear-gradient(transparent, #000 12%, #000 80%, transparent); }
+  .line { padding: 9px 4px; border-radius: 12px; transition: opacity .3s, transform .3s; opacity: .45;
+    transform-origin: left center; }
+  .line:active { background: rgba(255, 255, 255, 0.06); }
+  .line .orig { font-size: 24px; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+  .line .tr { font-size: 16px; font-weight: 600; color: var(--tr); margin-top: 4px; opacity: .75; }
+  .line.active { opacity: 1; }
+  .line.active .tr { opacity: 1; }
+  .line.near { opacity: .7; }
+  /* Karaoke: words already sung are bright, the word being sung fills left→right */
+  .line.active .orig .w { color: var(--dim); }
+  .line.active .orig .w.sung { color: var(--fg); }
+  .line.active .orig .w.part {
+    background: linear-gradient(90deg, var(--fg) var(--p), var(--dim) var(--p));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  #status { flex: 1; display: grid; place-items: center; text-align: center; padding: 24px;
+    color: var(--muted); font-size: 17px; line-height: 1.5; }
+
+  /* Bottom bar: offset controls */
+  footer { display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 8px 16px calc(var(--safe-bottom) + 10px); }
+  .pill { background: var(--card); border-radius: 99px; padding: 9px 14px; font-size: 14px; font-weight: 600; }
+  #offset { min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; }
+  #hint { position: fixed; left: 50%; bottom: calc(var(--safe-bottom) + 64px); transform: translateX(-50%);
+    background: rgba(30, 30, 34, 0.95); padding: 10px 16px; border-radius: 99px; font-size: 14px;
+    opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; z-index: 5; }
+  #hint.on { opacity: 1; }
+
+  /* Settings / onboarding sheet */
+  #sheet { position: fixed; inset: 0; z-index: 10; background: rgba(0, 0, 0, 0.6);
+    display: flex; align-items: flex-end; }
+  .panel { width: 100%; max-height: 92%; overflow-y: auto; background: #17171b;
+    border-radius: 22px 22px 0 0; padding: 20px 18px calc(var(--safe-bottom) + 24px); }
+  .panel h2 { margin: 0 0 4px; font-size: 22px; }
+  .panel h3 { margin: 22px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .panel p, .panel li { color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.5; }
+  .panel ol { padding-left: 20px; margin: 6px 0; }
+  .panel a { color: var(--accent); }
+  .field { background: var(--card); border-radius: 12px; padding: 12px 14px; margin: 8px 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .field label { font-size: 15px; }
+  .field input[type=text], .field select { background: transparent; border: 0; color: var(--fg); font-size: 16px;
+    text-align: right; min-width: 0; flex: 1; outline: none; }
+  .field input[type=color] { width: 40px; height: 30px; border: 0; background: none; padding: 0; }
+  code.copy { display: block; background: #000; border-radius: 10px; padding: 10px 12px; font-size: 13px;
+    word-break: break-all; color: var(--tr); margin: 6px 0; }
+  .btn { display: block; width: 100%; padding: 14px; border-radius: 14px; font-weight: 700; font-size: 17px;
+    background: var(--accent); color: #000; margin-top: 14px; text-align: center; }
+  .btn.secondary { background: var(--card); color: var(--fg); font-weight: 600; }
+  .switch { appearance: none; -webkit-appearance: none; width: 50px; height: 30px; border-radius: 99px;
+    background: rgba(255, 255, 255, 0.2); position: relative; transition: background .2s; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+    background: #fff; transition: left .2s; }
+  .switch:checked { background: var(--accent); }
+  .switch:checked::after { left: 23px; }
+</style>
+</head>
+<body>
+<div id="backdrop"></div>
+<div id="app">
+  <header>
+    <img id="art" alt="">
+    <div class="meta">
+      <div id="title">Lyrisland</div>
+      <div id="artist">Spotify'a bağlanılıyor…</div>
+      <span id="source" class="hidden"></span>
+    </div>
+    <button class="icon-btn" id="settingsBtn" aria-label="Ayarlar">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <div id="status">Yükleniyor…</div>
+  <div id="lyrics" class="hidden"></div>
+
+  <footer id="footer" class="hidden">
+    <button class="pill" id="minus">−0.5 sn</button>
+    <span id="offset">±0.0 sn</span>
+    <button class="pill" id="plus">+0.5 sn</button>
+    <button class="pill" id="reset">Sıfırla</button>
+  </footer>
+</div>
+<div id="hint"></div>
+
+<div id="sheet" class="hidden">
+  <div class="panel" id="panel"></div>
+</div>
+
+<script src="core.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+
+// ---------- Settings ----------
+const LANGS = [['tr', 'Türkçe'], ['en', 'English'], ['de', 'Deutsch'], ['fr', 'Français'], ['es', 'Español'],
+  ['it', 'Italiano'], ['ru', 'Русский'], ['ar', 'العربية'], ['ja', '日本語'], ['ko', '한국어']];
+const settings = Object.assign({ translate: true, lang: 'tr', color: '#ffd60a' }, store.get('settings', {}));
+function saveSettings() { store.set('settings', settings); applyColor(); }
+function applyColor() { document.documentElement.style.setProperty('--tr', settings.color); }
+applyColor();
+
+const REDIRECT_URI = location.origin + location.pathname.replace(/index\.html$/, '');
+const SCOPES = 'user-read-currently-playing user-read-playback-state';
+
+// ---------- Spotify auth (PKCE, no server needed) ----------
+const auth = {
+  clientId: store.get('clientId', ''),
+  token: store.get('token', null), // {access, refresh, expiresAt}
+};
+
+function b64url(bytes) {
+  return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function login() {
+  const verifier = b64url(crypto.getRandomValues(new Uint8Array(48)));
+  const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+  store.set('pkceVerifier', verifier);
+  const q = new URLSearchParams({
+    response_type: 'code', client_id: auth.clientId, scope: SCOPES, redirect_uri: REDIRECT_URI,
+    code_challenge_method: 'S256', code_challenge: challenge,
+  });
+  location.href = 'https://accounts.spotify.com/authorize?' + q;
+}
+
+async function tokenRequest(params) {
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(Object.assign({ client_id: auth.clientId }, params)),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.access_token) throw new Error(data.error_description || data.error || ('HTTP ' + res.status));
+  auth.token = {
+    access: data.access_token,
+    refresh: data.refresh_token || (auth.token && auth.token.refresh),
+    expiresAt: Date.now() + (data.expires_in - 60) * 1000,
+  };
+  store.set('token', auth.token);
+}
+
+async function handleRedirect() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has('code') && !q.has('error')) return;
+  history.replaceState(null, '', REDIRECT_URI);
+  if (q.has('error')) { showStatus('Spotify girişi iptal edildi: ' + q.get('error')); return; }
+  try {
+    await tokenRequest({ grant_type: 'authorization_code', code: q.get('code'), redirect_uri: REDIRECT_URI,
+      code_verifier: store.get('pkceVerifier', '') });
+  } catch (e) {
+    showStatus('Spotify girişi başarısız: ' + e.message + '<br><br>Ayarlar\'dan Client ID ve Redirect URI\'yi kontrol et.');
+  }
+  store.del('pkceVerifier');
+}
+
+async function accessToken() {
+  if (!auth.token) return null;
+  if (Date.now() > auth.token.expiresAt && auth.token.refresh) {
+    try { await tokenRequest({ grant_type: 'refresh_token', refresh_token: auth.token.refresh }); }
+    catch { logout(); return null; }
+  }
+  return auth.token.access;
+}
+
+function logout() { auth.token = null; store.del('token'); }
+
+// ---------- Playback polling ----------
+const play = { track: null, playing: false, anchor: null };
+let pollTimer = null;
+let backoffUntil = 0;
+
+async function poll() {
+  if (document.hidden || Date.now() < backoffUntil) return;
+  const token = await accessToken();
+  if (!token) { showOnboarding(); return; }
+  const t0 = performance.now();
+  let res;
+  try {
+    res = await fetch('https://api.spotify.com/v1/me/player/currently-playing?additional_types=track',
+      { headers: { Authorization: 'Bearer ' + token } });
+  } catch { return; } // offline — keep interpolating
+  const sampledAt = (t0 + performance.now()) / 2;
+  if (res.status === 401) { auth.token.expiresAt = 0; return; }
+  if (res.status === 429) { backoffUntil = Date.now() + (Number(res.headers.get('Retry-After')) || 5) * 1000; return; }
+  if (res.status === 204 || !res.ok) { setIdle('Spotify\'da şu an bir şey çalmıyor.<br>Spotify\'da bir şarkı başlat.'); return; }
+  const data = await res.json().catch(() => null);
+  if (!data || !data.item || data.currently_playing_type !== 'track') {
+    setIdle('Şu an şarkı çalmıyor (podcast veya reklam olabilir).'); return;
+  }
+  const item = data.item;
+  const position = (data.progress_ms || 0) / 1000;
+  play.anchor = Core.nextAnchor(play.anchor, play.playing, position, !!data.is_playing, sampledAt);
+  play.playing = !!data.is_playing;
+  if (!play.track || play.track.id !== item.id) {
+    play.track = {
+      id: item.id,
+      title: item.name,
+      artist: (item.artists || []).map((a) => a.name).join(', '),
+      album: item.album ? item.album.name : '',
+      duration: (item.duration_ms || 0) / 1000,
+      art: item.album && item.album.images && item.album.images[0] ? item.album.images[0].url : '',
+    };
+    play.anchor = { at: sampledAt, position };
+    onTrackChange();
+  }
+}
+
+function currentPosition() {
+  if (!play.anchor) return 0;
+  return play.playing ? play.anchor.position + (performance.now() - play.anchor.at) / 1000 : play.anchor.position;
+}
+
+function startPolling() {
+  clearInterval(pollTimer);
+  poll();
+  pollTimer = setInterval(poll, 1000);
+}
+
+// ---------- Lyrics ----------
+const lyr = { lines: [], source: '', estimated: false, offset: 0, active: -1, trackId: null };
+
+async function getJSON(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+async function findLyrics(track) {
+  const cacheKey = 'lyr:' + track.id;
+  const cached = store.get(cacheKey, null);
+  if (cached) return cached;
+
+  const title = Core.cleanTitle(track.title);
+  const artist = Core.primaryArtist(track.artist);
+  let plain = null;
+
+  // 1. LRCLIB exact match
+  const exact = await getJSON('https://lrclib.net/api/get?' + new URLSearchParams({
+    track_name: track.title, artist_name: artist, album_name: track.album, duration: Math.round(track.duration),
+  }));
+  if (exact && exact.syncedLyrics) {
+    const lines = Core.parseLRC(exact.syncedLyrics);
+    if (lines.length) return cacheLyrics(cacheKey, { lines, source: 'LRCLIB', estimated: false });
+  }
+  if (exact && exact.plainLyrics) plain = { text: exact.plainLyrics, source: 'LRCLIB' };
+
+  // 2. LRCLIB search — best-scoring synced result
+  const results = [].concat(
+    (await getJSON('https://lrclib.net/api/search?' + new URLSearchParams({ track_name: title, artist_name: artist }))) || [],
+    (await getJSON('https://lrclib.net/api/search?' + new URLSearchParams({ q: title + ' ' + artist }))) || []
+  );
+  let best = null;
+  for (const r of results) {
+    const score = Core.matchScore(track, { title: r.trackName, artist: r.artistName, duration: r.duration });
+    if (r.syncedLyrics && score >= 0.62 && (!best || score > best.score)) best = { score, r };
+    if (!plain && r.plainLyrics && score >= 0.72) plain = { text: r.plainLyrics, source: 'LRCLIB' };
+  }
+  if (best) {
+    const lines = Core.parseLRC(best.r.syncedLyrics);
+    if (lines.length) return cacheLyrics(cacheKey, { lines, source: 'LRCLIB', estimated: false });
+  }
+
+  // 3. Plain text (estimated timing): LRCLIB plain, then lyrics.ovh
+  if (!plain) {
+    const ovh = await getJSON('https://api.lyrics.ovh/v1/' + encodeURIComponent(artist) + '/' + encodeURIComponent(title));
+    if (ovh && ovh.lyrics && ovh.lyrics.trim()) plain = { text: ovh.lyrics, source: 'lyrics.ovh' };
+  }
+  if (plain) {
+    const lines = Core.estimateLines(plain.text, track.duration);
+    // Not cached: synced lyrics may appear later.
+    if (lines.length) return { lines, source: plain.source, estimated: true };
+  }
+  return null;
+}
+
+function cacheLyrics(key, value) { store.set(key, value); return value; }
+
+// ---------- Translation ----------
+async function gtx(text, target) {
+  const json = await getJSON('https://translate.googleapis.com/translate_a/single?' + new URLSearchParams({
+    client: 'gtx', sl: 'auto', tl: target, dt: 't', q: text,
+  }));
+  return Core.parseGtx(json);
+}
+
+async function myMemory(text, source, target) {
+  const json = await getJSON('https://api.mymemory.translated.net/get?' + new URLSearchParams({
+    q: text, langpair: (source || 'de') + '|' + target,
+  }));
+  const t = json && json.responseData && json.responseData.translatedText;
+  return t && json.responseStatus === 200 ? t : null;
+}
+
+async function translate(texts, target) {
+  const unique = Core.uniqueLines(texts);
+  if (!unique.length) return {};
+  const key = 'tr:' + target + ':' + Core.hash(unique.join('\n'));
+  const cached = store.get(key, null);
+  if (cached) return cached;
+
+  let map = {};
+  let source = null;
+  let gtxWorks = true;
+  for (const batch of Core.batches(unique, 1000)) {
+    const r = gtxWorks ? await gtx(batch.join('\n'), target) : null;
+    if (r) {
+      source = source || r.source;
+      if (Core.sameLanguage(r.source, target)) return {}; // song already in target language
+      const parts = r.text.split('\n');
+      if (parts.length === batch.length) { Object.assign(map, Core.pairUp(batch, parts)); continue; }
+      for (const line of batch) {
+        const one = await gtx(line, target);
+        if (one) Object.assign(map, Core.pairUp([line], [one.text]));
+      }
+    } else {
+      gtxWorks = false; // fall back to MyMemory line by line
+      for (const line of batch) {
+        const t = await myMemory(line, source, target);
+        if (t) Object.assign(map, Core.pairUp([line], [t]));
+      }
+    }
+  }
+  if (Object.keys(map).length) store.set(key, map);
+  return map;
+}
+
+// ---------- Rendering ----------
+const lyricsEl = $('lyrics');
+let lineEls = [];
+let userScrollUntil = 0;
+
+function showStatus(html) {
+  $('status').innerHTML = html;
+  $('status').classList.remove('hidden');
+  lyricsEl.classList.add('hidden');
+  $('footer').classList.add('hidden');
+}
+
+function setIdle(html) {
+  if (play.track) { play.playing = false; }
+  if (!lyr.lines.length) showStatus(html);
+}
+
+async function onTrackChange() {
+  const track = play.track;
+  $('title').textContent = track.title;
+  $('artist').textContent = track.artist;
+  $('art').src = track.art || '';
+  $('backdrop').style.backgroundImage = track.art ? 'url("' + track.art + '")' : '';
+  $('backdrop').classList.toggle('on', !!track.art);
+  $('source').classList.add('hidden');
+  lyr.lines = []; lyr.active = -1; lyr.offset = 0; lyr.trackId = track.id;
+  updateOffsetLabel();
+  showStatus('Sözler aranıyor…');
+
+  const found = await findLyrics(track);
+  if (lyr.trackId !== track.id) return; // track changed meanwhile
+  if (!found) { showStatus('Bu şarkı için söz bulunamadı 😕'); return; }
+  lyr.lines = found.lines.map((l) => ({ time: l.time, text: l.text, tr: null }));
+  lyr.source = found.source;
+  lyr.estimated = found.estimated;
+  $('source').textContent = found.source + (found.estimated ? ' ≈ tahmini zaman' : '');
+  $('source').classList.remove('hidden');
+  renderLines();
+
+  if (settings.translate) {
+    const map = await translate(lyr.lines.map((l) => l.text), settings.lang);
+    if (lyr.trackId !== track.id) return;
+    lyr.lines.forEach((l, i) => {
+      const t = map[l.text.trim()];
+      if (t) { l.tr = t; lineEls[i].querySelector('.tr').textContent = t; lineEls[i].querySelector('.tr').classList.remove('hidden'); }
+    });
+  }
+}
+
+function renderLines() {
+  lyricsEl.innerHTML = '';
+  lineEls = lyr.lines.map((l, i) => {
+    const el = document.createElement('div');
+    el.className = 'line';
+    el.dataset.i = i;
+    const orig = document.createElement('div');
+    orig.className = 'orig';
+    orig.textContent = l.text;
+    const tr = document.createElement('div');
+    tr.className = 'tr' + (l.tr ? '' : ' hidden');
+    tr.textContent = l.tr || '';
+    el.append(orig, tr);
+    lyricsEl.appendChild(el);
+    return el;
+  });
+  $('status').classList.add('hidden');
+  lyricsEl.classList.remove('hidden');
+  $('footer').classList.remove('hidden');
+  lyr.active = -1;
+}
+
+/** Split the active line into word spans for the karaoke fill. */
+function buildWords(el, text) {
+  const orig = el.querySelector('.orig');
+  orig.innerHTML = '';
+  const parts = text.split(/(\s+)/);
+  const words = [];
+  let start = 0;
+  for (const p of parts) {
+    if (!p) continue;
+    const span = document.createElement('span');
+    span.textContent = p;
+    if (/\S/.test(p)) { span.className = 'w'; words.push({ span, start, end: start + p.length }); }
+    orig.appendChild(span);
+    start += p.length;
+  }
+  el._words = words;
+  el._len = text.length;
+}
+
+function clearWords(el, text) {
+  el.querySelector('.orig').textContent = text;
+  el._words = null;
+}
+
+function setActive(i) {
+  if (i === lyr.active) return;
+  const prev = lyr.active;
+  if (prev >= 0 && lineEls[prev]) {
+    lineEls[prev].classList.remove('active');
+    clearWords(lineEls[prev], lyr.lines[prev].text);
+  }
+  lineEls.forEach((el, k) => el.classList.toggle('near', i >= 0 && Math.abs(k - i) === 1));
+  lyr.active = i;
+  if (i >= 0 && lineEls[i]) {
+    lineEls[i].classList.add('active');
+    buildWords(lineEls[i], lyr.lines[i].text);
+    if (Date.now() > userScrollUntil) lineEls[i].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+}
+
+function frame() {
+  if (lyr.lines.length) {
+    const pos = currentPosition() + lyr.offset;
+    const i = Core.lineIndex(lyr.lines, pos);
+    setActive(i);
+    const el = lineEls[i];
+    if (el && el._words) {
+      const sung = Core.progress(lyr.lines, i, pos) * el._len;
+      for (const w of el._words) {
+        if (sung >= w.end) { w.span.className = 'w sung'; }
+        else if (sung > w.start) { w.span.className = 'w part'; w.span.style.setProperty('--p', (100 * (sung - w.start) / (w.end - w.start)).toFixed(1) + '%'); }
+        else { w.span.className = 'w'; }
+      }
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+// Tap a line = "the singer is here right now" (Spotify is not touched)
+lyricsEl.addEventListener('click', (e) => {
+  const el = e.target.closest('.line');
+  if (!el) return;
+  const i = Number(el.dataset.i);
+  lyr.offset += Core.offsetDelta(lyr.lines[i].time, currentPosition(), lyr.offset);
+  userScrollUntil = 0;
+  updateOffsetLabel();
+  hint('Senkronlandı ✓');
+});
+// Pause auto-scroll while the user browses the lyrics
+['touchmove', 'wheel'].forEach((ev) => lyricsEl.addEventListener(ev, () => { userScrollUntil = Date.now() + 4000; }, { passive: true }));
+
+function updateOffsetLabel() {
+  const o = lyr.offset;
+  $('offset').textContent = (o >= 0 ? '+' : '−') + Math.abs(o).toFixed(1) + ' sn';
+}
+$('minus').onclick = () => { lyr.offset -= 0.5; updateOffsetLabel(); };
+$('plus').onclick = () => { lyr.offset += 0.5; updateOffsetLabel(); };
+$('reset').onclick = () => { lyr.offset = 0; updateOffsetLabel(); hint('Zaman ayarı sıfırlandı'); };
+
+let hintTimer = null;
+function hint(text) {
+  $('hint').textContent = text;
+  $('hint').classList.add('on');
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => $('hint').classList.remove('on'), 1400);
+}
+
+// ---------- Keep the screen awake while lyrics are open ----------
+let wakeLock = null;
+async function keepAwake() {
+  try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch {}
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { keepAwake(); poll(); } });
+document.addEventListener('click', keepAwake, { once: true });
+
+// ---------- Settings & onboarding sheet ----------
+function openSheet(html, bind) {
+  $('panel').innerHTML = html;
+  $('sheet').classList.remove('hidden');
+  bind && bind();
+}
+function closeSheet() { $('sheet').classList.add('hidden'); }
+$('sheet').addEventListener('click', (e) => { if (e.target.id === 'sheet' && auth.token) closeSheet(); });
+
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+function showOnboarding() {
+  if (!$('sheet').classList.contains('hidden')) return;
+  showStatus('Spotify hesabını bağla.');
+  openSettings(true);
+}
+
+function openSettings(onboarding) {
+  const langOptions = LANGS.map(([c, n]) => `<option value="${c}" ${c === settings.lang ? 'selected' : ''}>${n}</option>`).join('');
+  openSheet(`
+    <h2>${onboarding ? 'Lyrisland\'a hoş geldin' : 'Ayarlar'}</h2>
+    ${onboarding ? '<p>Spotify\'da çalan şarkının sözlerini Türkçe çevirisiyle gösterir. Başlamak için bir kerelik Spotify bağlantısı gerekiyor.</p>' : ''}
+
+    <h3>1 · Spotify geliştirici kaydı</h3>
+    <ol>
+      <li><a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a> adresine Spotify hesabınla gir.</li>
+      <li><b>Create app</b>'e bas. İsim: <i>Lyrisland</i>, açıklama: <i>lyrics</i>.</li>
+      <li><b>Redirect URI</b> kutusuna şunu yapıştır ve <b>Add</b>'e bas:</li>
+    </ol>
+    <code class="copy" id="redir">${esc(REDIRECT_URI)}</code>
+    <button class="btn secondary" id="copyRedir">Redirect URI'yi kopyala</button>
+    <ol start="4">
+      <li><b>Web API</b> kutusunu işaretle, şartları kabul et ve <b>Save</b>'e bas.</li>
+      <li>Açılan sayfada <b>Client ID</b>'yi kopyala ve aşağıya yapıştır.</li>
+    </ol>
+    <div class="field"><label>Client ID</label><input type="text" id="clientId" placeholder="yapıştır" value="${esc(auth.clientId)}" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+
+    <h3>2 · Bağlan</h3>
+    <button class="btn" id="connect">${auth.token ? 'Spotify yeniden bağlan' : 'Spotify ile bağlan'}</button>
+
+    <h3>Çeviri</h3>
+    <div class="field"><label>Çeviriyi göster</label><input type="checkbox" class="switch" id="translate" ${settings.translate ? 'checked' : ''}></div>
+    <div class="field"><label>Dil</label><select id="lang">${langOptions}</select></div>
+    <div class="field"><label>Çeviri rengi</label><input type="color" id="color" value="${esc(settings.color)}"></div>
+
+    ${auth.token ? '<button class="btn secondary" id="close">Kapat</button><button class="btn secondary" id="logout">Spotify bağlantısını kes</button>' : ''}
+  `, () => {
+    $('copyRedir').onclick = async () => { try { await navigator.clipboard.writeText(REDIRECT_URI); hint('Kopyalandı ✓'); } catch { hint('Uzun basıp kopyala'); } };
+    $('clientId').oninput = (e) => { auth.clientId = e.target.value.trim(); store.set('clientId', auth.clientId); };
+    $('connect').onclick = () => { if (!auth.clientId) { hint('Önce Client ID\'yi yapıştır'); return; } login(); };
+    $('translate').onchange = (e) => { settings.translate = e.target.checked; saveSettings(); refreshTranslations(); };
+    $('lang').onchange = (e) => { settings.lang = e.target.value; saveSettings(); refreshTranslations(); };
+    $('color').oninput = (e) => { settings.color = e.target.value; saveSettings(); };
+    if ($('close')) $('close').onclick = closeSheet;
+    if ($('logout')) $('logout').onclick = () => { logout(); closeSheet(); location.reload(); };
+  });
+}
+$('settingsBtn').onclick = () => openSettings(false);
+
+function refreshTranslations() {
+  if (!play.track) return;
+  lyr.lines.forEach((l, i) => { l.tr = null; const t = lineEls[i] && lineEls[i].querySelector('.tr'); if (t) t.classList.add('hidden'); });
+  if (settings.translate && lyr.lines.length) {
+    const id = lyr.trackId;
+    translate(lyr.lines.map((l) => l.text), settings.lang).then((map) => {
+      if (lyr.trackId !== id) return;
+      lyr.lines.forEach((l, i) => { const t = map[l.text.trim()]; if (t) { l.tr = t; const el = lineEls[i].querySelector('.tr'); el.textContent = t; el.classList.remove('hidden'); } });
+    });
+  }
+}
+
+// ---------- Start ----------
+(async function start() {
+  await handleRedirect();
+  requestAnimationFrame(frame);
+  if (!auth.token) { showOnboarding(); return; }
+  showStatus('Spotify\'a bağlanılıyor…');
+  startPolling();
+})();
+</script>
+</body>
+</html>
